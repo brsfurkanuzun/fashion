@@ -1,0 +1,183 @@
+/**
+ * Stüdyo sidebar — Untitled tokenları site temasına uyarlanır.
+ * Açık temada beyaz, koyu temada koyu yüzey kullanılır.
+ */
+.studio-sidebar-ui {
+  --color-brand-50: #fafafa;
+  --color-brand-100: #f4f4f5;
+  --color-brand-200: #e4e4e7;
+  --color-brand-500: #7a6b58;
+  --color-brand-600: #7a6b58;
+  --color-brand-700: #6b5d4d;
+
+  --color-utility-brand-50: #fafafa;
+  --color-utility-brand-100: #f4f4f5;
+  --color-utility-brand-200: #e4e4e7;
+  --color-utility-brand-500: #7a6b58;
+  --color-utility-brand-600: #7a6b58;
+  --color-utility-brand-700: #6b5d4d;
+
+  --color-focus-ring: #d4d4d8;
+  --color-bg-brand-primary: #ffffff;
+  --color-bg-brand-secondary: #f4f4f5;
+  --color-bg-brand-solid: #18181b;
+
+  --color-bg-primary: #ffffff;
+  --color-bg-primary_hover: rgba(0, 0, 0, 0.04);
+  --color-bg-primary_alt: #ffffff;
+  --color-bg-secondary: rgba(0, 0, 0, 0.06);
+  --color-bg-secondary_hover: rgba(0, 0, 0, 0.08);
+  --color-bg-active: rgba(0, 0, 0, 0.04);
+  --color-bg-primary-solid: #18181b;
+
+  --color-fg-primary: #18181b;
+  --color-fg-secondary: #3f3f46;
+  --color-fg-secondary_hover: #18181b;
+  --color-fg-tertiary: #71717a;
+  --color-fg-quaternary: #a1a1aa;
+  --color-fg-quaternary_hover: #71717a;
+  --color-fg-brand-primary: #7a6b58;
+  --color-fg-brand-secondary: #7a6b58;
+
+  --color-border-secondary: rgba(0, 0, 0, 0.08);
+  --background-color-primary: #ffffff;
+  --background-color-primary_hover: rgba(0, 0, 0, 0.04);
+  --background-color-secondary: rgba(0, 0, 0, 0.06);
+  --background-color-secondary_hover: rgba(0, 0, 0, 0.08);
+  --background-color-primary-solid: #18181b;
+
+  /* index.css --color-primary (mavi) ezmesin */
+  --color-primary: #ffffff;
+
+  color: #18181b;
+  background-color: #ffffff;
+}
+
+.dark .studio-sidebar-ui {
+  --color-brand-50: #18181b;
+  --color-brand-100: #1f1f23;
+  --color-brand-200: #27272a;
+  --color-brand-500: #e8dcc8;
+  --color-brand-600: #e8dcc8;
+  --color-brand-700: #f0e8da;
+
+  --color-utility-brand-50: #18181b;
+  --color-utility-brand-100: #1f1f23;
+  --color-utility-brand-200: #27272a;
+  --color-utility-brand-500: #e8dcc8;
+  --color-utility-brand-600: #e8dcc8;
+  --color-utility-brand-700: #f0e8da;
+
+  --color-focus-ring: #52525b;
+  --color-bg-brand-primary: #141414;
+  --color-bg-brand-secondary: #1f1f23;
+  --color-bg-brand-solid: #fafaf9;
+
+  --color-bg-primary: #141414;
+  --color-bg-primary_hover: rgba(255, 255, 255, 0.06);
+  --color-bg-primary_alt: #141414;
+  --color-bg-secondary: rgba(255, 255, 255, 0.08);
+  --color-bg-secondary_hover: rgba(255, 255, 255, 0.12);
+  --color-bg-active: rgba(255, 255, 255, 0.06);
+  --color-bg-primary-solid: #fafaf9;
+
+  --color-fg-primary: #fafaf9;
+  --color-fg-secondary: #d4d4d8;
+  --color-fg-secondary_hover: #fafaf9;
+  --color-fg-tertiary: #a1a1aa;
+  --color-fg-quaternary: #71717a;
+  --color-fg-quaternary_hover: #d4d4d8;
+  --color-fg-brand-primary: #e8dcc8;
+  --color-fg-brand-secondary: #e8dcc8;
+
+  --color-border-secondary: rgba(255, 255, 255, 0.08);
+  --background-color-primary: #141414;
+  --background-color-primary_hover: rgba(255, 255, 255, 0.06);
+  --background-color-secondary: rgba(255, 255, 255, 0.08);
+  --background-color-secondary_hover: rgba(255, 255, 255, 0.12);
+  --background-color-primary-solid: #fafaf9;
+
+  --color-primary: #141414;
+
+  color: #fafaf9;
+  background-color: #141414;
+}
+
+/* Untitled bg-primary ile site primary'si çakışmasın */
+.studio-sidebar-ui .bg-primary {
+  background-color: #ffffff !important;
+}
+
+.dark .studio-sidebar-ui .bg-primary {
+  background-color: #141414 !important;
+}
+
+.studio-sidebar-ui .hover\:bg-primary_hover:hover,
+.studio-sidebar-ui .pressed\:bg-primary_hover[data-pressed] {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+.dark .studio-sidebar-ui .hover\:bg-primary_hover:hover,
+.dark .studio-sidebar-ui .pressed\:bg-primary_hover[data-pressed] {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.studio-sidebar-ui .bg-secondary,
+.studio-sidebar-ui .bg-secondary_hover {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.dark .studio-sidebar-ui .bg-secondary,
+.dark .studio-sidebar-ui .bg-secondary_hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.studio-sidebar-ui .hover\:bg-secondary_hover:hover {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.dark .studio-sidebar-ui .hover\:bg-secondary_hover:hover {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.studio-sidebar-ui .outline-focus-ring:focus-visible {
+  outline-color: #d4d4d8 !important;
+}
+
+.dark .studio-sidebar-ui .outline-focus-ring:focus-visible {
+  outline-color: #52525b !important;
+}
+
+.studio-sidebar-ui .bg-primary-solid {
+  background-color: #18181b !important;
+}
+
+.dark .studio-sidebar-ui .bg-primary-solid {
+  background-color: #fafaf9 !important;
+}
+
+.studio-sidebar-ui .ring-primary {
+  --tw-ring-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.dark .studio-sidebar-ui .ring-primary {
+  --tw-ring-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.studio-sidebar-ui .text-secondary,
+.studio-sidebar-ui .text-secondary_hover {
+  color: #3f3f46 !important;
+}
+
+.dark .studio-sidebar-ui .text-secondary,
+.dark .studio-sidebar-ui .text-secondary_hover {
+  color: #d4d4d8 !important;
+}
+
+.studio-sidebar-ui .text-tertiary {
+  color: #71717a !important;
+}
+
+.dark .studio-sidebar-ui .text-tertiary {
+  color: #a1a1aa !important;
+}
