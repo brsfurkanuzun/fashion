@@ -8,6 +8,10 @@ public sealed class GenerationJob
     public string Prompt { get; set; } = string.Empty;
     public int CreditCost { get; set; }
     public JobStatus Status { get; set; } = JobStatus.Queued;
+    public string? FashnJobId { get; set; }
+    public string? ResultUrls { get; set; }
+    public string? ErrorMessage { get; set; }
+    public DateTime? CompletedAtUtc { get; set; }
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public User User { get; set; } = null!;

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeftRight,
@@ -15,13 +16,14 @@ import {
   ImagePlus,
   Images,
   Info,
+  Loader,
+  Maximize,
+  Minimize,
   MessageCircle,
   Megaphone,
-  MoreVertical,
-  Plus,
+  PanelRight,
   Repeat,
   RotateCcw,
-  Send,
   Settings,
   Shirt,
   SquareCheckBig,
@@ -35,119 +37,61 @@ import {
   ZoomOut,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { apiUrl } from '@/lib/api'
 
-const GALLERY_GROUPS = [
-  {
-    date: 'May 26, 2026',
-    items: [
-      {
-        id: 'g-1',
-        tool: 'Product to Model',
-        description: 'Turn wearable product images into professional model photography',
-        image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80',
-        generationId: 'gen-019dc6ae-7f6a-76a3-841f-3c15250ef47e',
-        createdAt: '26 Apr 26, 1:06 am',
-        dimensions: '2048x2048',
-        prompt: 'Create a luxury editorial look with soft studio lighting, elevated styling, and clean fashion composition.',
-      },
-      {
-        id: 'g-2',
-        tool: 'Edit',
-        description: 'Change color, pose, background and more with a single prompt',
-        image: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80',
-        generationId: 'gen-019dc6ad-b0a8-7fa0-b91f-b818476c416f',
-        createdAt: '26 Apr 26, 12:54 am',
-        dimensions: '2048x2048',
-        prompt: 'Refine the composition, clean the background, and enhance the styling with a premium campaign finish.',
-      },
-      {
-        id: 'g-3',
-        tool: 'Edit',
-        description: 'Refine details and color treatment for campaign-ready output',
-        image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80',
-        generationId: 'gen-019dc6ad-43a4-72b3-9a32-bc7df1e2c6f5',
-        createdAt: '26 Apr 26, 12:31 am',
-        dimensions: '1600x2000',
-        prompt: 'Adjust the tonal balance, sharpen clothing detail, and give the image a premium magazine feel.',
-      },
-      {
-        id: 'g-4',
-        tool: 'Product to Model',
-        description: 'Create premium lookbook imagery from a single product image',
-        image: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=900&q=80',
-        generationId: 'gen-019dc6ac-9ca7-7160-a1f7-34386439f7e5',
-        createdAt: '25 Apr 26, 11:48 pm',
-        dimensions: '2048x2048',
-        prompt: 'Generate a polished model shot with soft shadows and neutral editorial styling.',
-      },
-      {
-        id: 'g-5',
-        tool: 'Try-On',
-        description: 'Visualize how an outfit looks on different models',
-        image: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80',
-        generationId: 'gen-019dc6ab-9a15-7523-ae3a-8539c218d35e',
-        createdAt: '25 Apr 26, 11:20 pm',
-        dimensions: '1536x2048',
-        prompt: 'Apply the selected garment to a confident fashion model while preserving fit and material texture.',
-      },
-      {
-        id: 'g-6',
-        tool: 'Try-On',
-        description: 'Try a garment across different styles and silhouettes',
-        image: 'https://images.unsplash.com/photo-1506629905607-d9f786ae6a2f?auto=format&fit=crop&w=900&q=80',
-        generationId: 'gen-019dc6a9-fbc0-73e1-a90e-febf378c7849',
-        createdAt: '25 Apr 26, 10:52 pm',
-        dimensions: '1536x2048',
-        prompt: 'Place the clothing on a new model with a fashion-forward silhouette and clean studio framing.',
-      },
-    ],
-  },
-  {
-    date: 'May 24, 2026',
-    items: [
-      {
-        id: 'g-7',
-        tool: 'Editorial',
-        description: 'Build a stronger fashion story with dramatic scene direction',
-        image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80',
-        generationId: 'gen-019dc699-e8a1-7123-a90d-2cb1f3781234',
-        createdAt: '24 Apr 26, 6:10 pm',
-        dimensions: '1600x2000',
-        prompt: 'Create a cinematic editorial frame with directional light and refined neutral tones.',
-      },
-      {
-        id: 'g-8',
-        tool: 'Pose',
-        description: 'Explore dynamic movement and posing variations',
-        image: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80',
-        generationId: 'gen-019dc698-a1d2-7432-b710-6ac2d9184abc',
-        createdAt: '24 Apr 26, 5:42 pm',
-        dimensions: '1536x2048',
-        prompt: 'Shift the model into a stronger editorial pose while maintaining styling coherence.',
-      },
-      {
-        id: 'g-9',
-        tool: 'Model',
-        description: 'Generate a new virtual model direction for the same collection',
-        image: 'https://images.unsplash.com/photo-1495385794356-15371f348c31?auto=format&fit=crop&w=900&q=80',
-        generationId: 'gen-019dc697-5ff2-7332-9c41-a8aef12db882',
-        createdAt: '24 Apr 26, 4:58 pm',
-        dimensions: '1536x2048',
-        prompt: 'Create a fresh AI model for this campaign with premium casting and minimal styling.',
-      },
-      {
-        id: 'g-10',
-        tool: 'Scene',
-        description: 'Rebuild the environment around the fashion subject',
-        image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80',
-        generationId: 'gen-019dc696-44aa-71aa-8ed0-1a32bc7df100',
-        createdAt: '24 Apr 26, 3:40 pm',
-        dimensions: '1792x1344',
-        prompt: 'Place the fashion subject in a premium scene with modern set design and brand-consistent tone.',
-      },
-    ],
-  },
-]
+const TOOL_LABELS = {
+  'cekim-model': 'Manken & Giyim',
+  'cekim-editorial': 'Sahne',
+  'cekim-pose': 'Poz',
+  'cekim-video': 'Hareket',
+  'pro-model': 'Model',
+  'pro-tryon': 'Try-On',
+  'pro-edit': 'Edit',
+  'pro-decoupe': 'Decoupe',
+  'pro-editorial': 'Editorial',
+  'pro-moodboard': 'Moodboard',
+  'pro-swap': 'Swap',
+  'pro-pose': 'Pose',
+  'pro-angle': 'Angle',
+  'pro-video': 'Video',
+}
+
+function formatDate(isoString) {
+  const d = new Date(isoString)
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+function formatTime(isoString) {
+  const d = new Date(isoString)
+  return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' })
+}
+
+function groupByDay(items) {
+  const map = new Map()
+  for (const item of items) {
+    const key = formatDate(item.createdAtUtc)
+    if (!map.has(key)) map.set(key, [])
+    map.get(key).push(item)
+  }
+  return Array.from(map.entries()).map(([date, dayItems]) => ({ date, items: dayItems }))
+}
+
+async function downloadImage(url, filename = 'nuladesign-output.jpg') {
+  try {
+    const res = await fetch(url)
+    const blob = await res.blob()
+    const blobUrl = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = blobUrl
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
+  } catch {
+    window.open(url, '_blank')
+  }
+}
 
 export default function GalleryPage() {
   const { user } = useAuth()
@@ -158,14 +102,60 @@ export default function GalleryPage() {
   const [zoom, setZoom] = useState(1)
   const [likedIds, setLikedIds] = useState([])
   const [inputsOpen, setInputsOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const viewerRef = useRef(null)
+  const [galleryItems, setGalleryItems] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
   const tab = searchParams.get('tab') === 'collections' ? 'collections' : 'library'
-  const totalItems = useMemo(
-    () => GALLERY_GROUPS.reduce((acc, group) => acc + group.items.length, 0),
-    []
-  )
-  const allItems = useMemo(() => GALLERY_GROUPS.flatMap((group) => group.items), [])
-  const selectedItem = allItems.find((item) => item.id === selectedId) ?? null
-  const recentItems = allItems.slice(0, 5)
+
+  const fetchGallery = useCallback(async () => {
+    if (!user?.id) return
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch(apiUrl(`/api/gallery?userId=${user.id}`))
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      setGalleryItems(data)
+    } catch (err) {
+      setError('Galeri yüklenemedi.')
+    } finally {
+      setLoading(false)
+    }
+  }, [user?.id])
+
+  useEffect(() => {
+    fetchGallery()
+  }, [fetchGallery])
+
+  const galleryGroups = useMemo(() => groupByDay(galleryItems), [galleryItems])
+  const totalItems = galleryItems.length
+  const selectedItem = galleryItems.find((item) => item.id === selectedId) ?? null
+  const recentItems = galleryItems.slice(0, 5)
+
+  const closeViewer = useCallback(() => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {})
+    setSelectedId(null)
+    setZoom(1)
+    setInputsOpen(false)
+    setIsFullscreen(false)
+  }, [])
+
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.().then(() => setIsFullscreen(true)).catch(() => {})
+    } else {
+      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {})
+    }
+  }, [])
+
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement)
+    document.addEventListener('fullscreenchange', onFsChange)
+    return () => document.removeEventListener('fullscreenchange', onFsChange)
+  }, [])
 
   useEffect(() => {
     if (!selectedItem) return undefined
@@ -174,10 +164,14 @@ export default function GalleryPage() {
     document.body.style.overflow = 'hidden'
 
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && !document.fullscreenElement) {
         setSelectedId(null)
         setZoom(1)
       }
+      if (event.key === 'f' || event.key === 'F') toggleFullscreen()
+      if (event.key === '+' || event.key === '=') setZoom((v) => Math.min(4, Number((v + 0.25).toFixed(2))))
+      if (event.key === '-') setZoom((v) => Math.max(0.25, Number((v - 0.25).toFixed(2))))
+      if (event.key === '0') setZoom(1)
     }
 
     window.addEventListener('keydown', onKeyDown)
@@ -185,13 +179,7 @@ export default function GalleryPage() {
       document.body.style.overflow = previous
       window.removeEventListener('keydown', onKeyDown)
     }
-  }, [selectedItem])
-
-  const closeViewer = () => {
-    setSelectedId(null)
-    setZoom(1)
-    setInputsOpen(false)
-  }
+  }, [selectedItem, toggleFullscreen])
 
   const toggleLike = (id) => {
     setLikedIds((prev) => (prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id]))
@@ -384,39 +372,65 @@ export default function GalleryPage() {
                     <div className="relative flex flex-col">
                       {tab === 'library' ? (
                         <div className="px-6 pt-5 pb-4">
-                          <div className="flex flex-col gap-8">
-                            {GALLERY_GROUPS.map((group) => (
-                              <section key={group.date} className="flex flex-col gap-4">
-                                <div className="flex w-full items-center gap-3">
-                                  <span className="whitespace-nowrap text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                                    {group.date}
-                                  </span>
-                                  <div className="h-px flex-1 bg-border" />
-                                </div>
+                          {loading ? (
+                            <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
+                              <Loader className="mb-3 h-7 w-7 animate-spin text-champagne" />
+                              <p className="text-sm">Galeri yükleniyor...</p>
+                            </div>
+                          ) : error ? (
+                            <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
+                              <p className="text-sm">{error}</p>
+                              <button type="button" onClick={fetchGallery} className="mt-3 text-xs underline">
+                                Tekrar dene
+                              </button>
+                            </div>
+                          ) : galleryGroups.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
+                              <ImagePlus className="mb-3 h-10 w-10 opacity-30" strokeWidth={1.4} />
+                              <p className="text-sm font-medium">Henüz üretim yok</p>
+                              <p className="mt-1 text-xs text-muted-foreground">Studio'da ilk görselini oluştur.</p>
+                              <Link
+                                to="/fashion"
+                                className="mt-4 rounded-xl border border-border/60 px-4 py-2 text-xs font-medium text-foreground transition-colors hover:bg-foreground/[0.04]"
+                              >
+                                Studio'ya git
+                              </Link>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col gap-8">
+                              {galleryGroups.map((group) => (
+                                <section key={group.date} className="flex flex-col gap-4">
+                                  <div className="flex w-full items-center gap-3">
+                                    <span className="whitespace-nowrap text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                                      {group.date}
+                                    </span>
+                                    <div className="h-px flex-1 bg-border" />
+                                  </div>
 
-                                <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 xl:max-w-6xl xl:grid-cols-5 2xl:max-w-full 2xl:grid-cols-6">
-                                  {group.items.map((item) => (
-                                    <button
-                                      key={item.id}
-                                      type="button"
-                                      onClick={() => setSelectedId(item.id)}
-                                      className="group relative h-full w-full cursor-pointer overflow-hidden rounded-lg bg-muted text-left transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [@media(hover:hover)]:hover:scale-[1.02] [@media(hover:hover)]:hover:shadow-lg"
-                                    >
-                                      <img
-                                        alt={`Generated from ${item.tool}`}
-                                        className="block aspect-[3/4] h-auto w-full rounded-lg object-cover transition-transform duration-300 [@media(hover:hover)]:group-hover:scale-105"
-                                        src={item.image}
-                                      />
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                                      <div className="absolute bottom-0 left-0 right-0 p-3 text-left text-white opacity-0 transition-opacity group-hover:opacity-100">
-                                        <p className="text-xs font-medium">{item.tool}</p>
-                                      </div>
-                                    </button>
-                                  ))}
-                                </div>
-                              </section>
-                            ))}
-                          </div>
+                                  <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 xl:max-w-6xl xl:grid-cols-5 2xl:max-w-full 2xl:grid-cols-6">
+                                    {group.items.map((item) => (
+                                      <button
+                                        key={item.id}
+                                        type="button"
+                                        onClick={() => setSelectedId(item.id)}
+                                        className="group relative h-full w-full cursor-pointer overflow-hidden rounded-lg bg-muted text-left transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [@media(hover:hover)]:hover:scale-[1.02] [@media(hover:hover)]:hover:shadow-lg"
+                                      >
+                                        <img
+                                          alt={`Generated from ${TOOL_LABELS[item.toolKey] ?? item.toolKey}`}
+                                          className="block aspect-[3/4] h-auto w-full rounded-lg object-cover transition-transform duration-300 [@media(hover:hover)]:group-hover:scale-105"
+                                          src={item.previewUrl}
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+                                        <div className="absolute bottom-0 left-0 right-0 p-3 text-left text-white opacity-0 transition-opacity group-hover:opacity-100">
+                                          <p className="text-xs font-medium">{TOOL_LABELS[item.toolKey] ?? item.toolKey}</p>
+                                        </div>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </section>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="px-6 pt-8 pb-10">
@@ -460,278 +474,229 @@ export default function GalleryPage() {
 
       <div className="h-16 pb-[env(safe-area-inset-bottom)] md:hidden" />
 
-      {selectedItem && (
-        <div className="fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]" onClick={closeViewer} />
-
-          <div className="fixed inset-x-0 top-0 bottom-0 z-50 flex h-[100dvh] flex-col overflow-hidden bg-background md:top-14 md:h-auto md:flex-row md:rounded-xl md:bg-background/92">
-            <div className="flex min-h-0 flex-1 flex-col">
-              <div className="flex items-center justify-between border-b border-border bg-background px-4 py-3 md:px-6 md:py-4">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <button
-                    type="button"
-                    disabled={zoom <= 0.6}
-                    onClick={() => setZoom((value) => Math.max(0.5, Number((value - 0.1).toFixed(1))))}
-                    className="inline-flex h-fit w-fit items-center justify-center rounded-xl p-1 text-foreground transition-all hover:bg-white/60 disabled:pointer-events-none disabled:opacity-50 dark:hover:bg-white/5"
-                    aria-label="Zoom out"
-                  >
-                    <ZoomOut className="h-4 w-4" />
-                  </button>
-                  <span className="min-w-[3rem] text-center text-xs font-medium md:min-w-[4rem] md:text-sm">
-                    {Math.round(zoom * 100)}%
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setZoom((value) => Math.min(3, Number((value + 0.1).toFixed(1))))}
-                    className="inline-flex h-fit w-fit items-center justify-center rounded-xl p-1 text-foreground transition-all hover:bg-white/60 dark:hover:bg-white/5"
-                    aria-label="Zoom in"
-                  >
-                    <ZoomIn className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setZoom(1)}
-                    className="inline-flex h-fit w-fit items-center justify-center rounded-xl p-1 text-foreground transition-all hover:bg-white/60 dark:hover:bg-white/5"
-                    aria-label="Reset zoom"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={closeViewer}
-                  className="inline-flex h-fit w-fit items-center justify-center rounded-xl p-1 text-foreground transition-all hover:bg-white/60 dark:hover:bg-white/5"
-                  aria-label="Close"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-muted/20 p-4 md:p-8">
-                <div className="flex h-full w-full min-h-0 min-w-0 items-center justify-center">
-                  <img
-                    alt="Generated content"
-                    draggable="false"
-                    src={selectedItem.image}
-                    className="max-h-full max-w-full rounded-lg object-contain shadow-2xl"
-                    style={{ transform: `scale(${zoom})` }}
-                  />
-                </div>
-
-                <span className="absolute bottom-4 left-4 rounded-full bg-black/50 px-2.5 py-1 text-[11px] font-medium tabular-nums text-white/80 backdrop-blur-sm md:bottom-6 md:left-6">
-                  {selectedItem.dimensions}
-                </span>
-              </div>
-
-              <div className="shrink-0 border-t bg-background pb-[env(safe-area-inset-bottom)] md:hidden">
-                <div className="mx-auto grid h-16 max-w-lg grid-cols-5 items-center font-medium">
-                  <a
-                    href={selectedItem.image}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex h-fit w-fit flex-col items-center justify-center rounded-xl p-1 px-5 text-sm font-medium text-foreground transition-all hover:bg-white/60 dark:hover:bg-white/5"
-                  >
-                    <Download className="mb-1 h-5 w-5" />
-                    <span className="text-xs">Save</span>
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => toggleLike(selectedItem.id)}
-                    className="inline-flex h-fit w-fit flex-col items-center justify-center rounded-xl p-1 px-5 text-sm font-medium text-foreground transition-all hover:bg-white/60 dark:hover:bg-white/5"
-                  >
-                    <Heart className={`mb-1 h-5 w-5 ${likedIds.includes(selectedItem.id) ? 'fill-current' : ''}`} />
-                    <span className="text-xs">Like</span>
-                  </button>
-                  <a
-                    href={selectedItem.image}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex h-fit w-fit flex-col items-center justify-center rounded-xl p-1 px-5 text-sm font-medium text-foreground transition-all hover:bg-white/60 dark:hover:bg-white/5"
-                  >
-                    <ExternalLink className="mb-1 h-5 w-5" />
-                    <span className="text-xs">Open</span>
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => setInputsOpen((value) => !value)}
-                    className="inline-flex h-fit w-fit flex-col items-center justify-center rounded-xl p-1 px-5 text-sm font-medium text-foreground transition-all hover:bg-white/60 dark:hover:bg-white/5"
-                  >
-                    <Info className="mb-1 h-5 w-5" />
-                    <span className="text-xs">Info</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="inline-flex h-fit w-fit flex-col items-center justify-center rounded-xl p-1 px-5 text-sm font-medium text-foreground transition-all hover:bg-white/60 dark:hover:bg-white/5"
-                  >
-                    <MoreVertical className="mb-1 h-5 w-5" />
-                    <span className="text-xs">Actions</span>
-                  </button>
-                </div>
-              </div>
+      {selectedItem && createPortal(
+        <div
+          ref={viewerRef}
+          className="fixed inset-0 z-[9999] flex flex-col bg-black"
+        >
+          {/* toolbar */}
+          <div className="flex shrink-0 items-center justify-between border-b border-white/[0.06] bg-black/80 px-4 py-2.5 backdrop-blur-sm">
+            {/* left — zoom controls */}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                disabled={zoom <= 0.25}
+                onClick={() => setZoom((v) => Math.max(0.25, Number((v - 0.25).toFixed(2))))}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition-colors hover:bg-white/10 hover:text-white disabled:pointer-events-none disabled:opacity-30"
+                aria-label="Zoom out"
+              >
+                <ZoomOut className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setZoom(1)}
+                className="min-w-[3.5rem] rounded-lg px-2 py-1 text-center text-xs font-medium tabular-nums text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                {Math.round(zoom * 100)}%
+              </button>
+              <button
+                type="button"
+                onClick={() => setZoom((v) => Math.min(4, Number((v + 0.25).toFixed(2))))}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Zoom in"
+              >
+                <ZoomIn className="h-4 w-4" />
+              </button>
+              <div className="mx-2 h-4 w-px bg-white/10" />
+              <button
+                type="button"
+                onClick={() => setZoom(1)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Reset zoom"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+              </button>
             </div>
 
-            <div className="hidden w-80 shrink-0 overflow-y-auto border-l border-border bg-card md:block">
-              <div className="flex h-full flex-col">
-                <div className="flex flex-col gap-6 border-b border-border p-6">
+            {/* center — tool label */}
+            <span className="hidden text-xs font-medium tracking-[0.08em] text-white/40 uppercase sm:inline">
+              {TOOL_LABELS[selectedItem.toolKey] ?? selectedItem.toolKey}
+            </span>
+
+            {/* right — actions */}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => downloadImage(selectedItem.previewUrl, `nuladesign-${selectedItem.toolKey}.jpg`)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Download"
+              >
+                <Download className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleLike(selectedItem.id)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Like"
+              >
+                <Heart className={`h-4 w-4 ${likedIds.includes(selectedItem.id) ? 'fill-white text-white' : ''}`} />
+              </button>
+              <a
+                href={selectedItem.previewUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Open in new tab"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </a>
+              <div className="mx-2 h-4 w-px bg-white/10 hidden sm:block" />
+              <button
+                type="button"
+                onClick={() => setSidebarOpen((v) => !v)}
+                className={`hidden sm:inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-white/10 ${sidebarOpen ? 'text-white' : 'text-white/40 hover:text-white'}`}
+                aria-label="Toggle info panel"
+              >
+                <PanelRight className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={toggleFullscreen}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Toggle fullscreen"
+              >
+                {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+              </button>
+              <div className="mx-2 h-4 w-px bg-white/10" />
+              <button
+                type="button"
+                onClick={closeViewer}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* body */}
+          <div className="flex min-h-0 flex-1 overflow-hidden">
+            {/* image area */}
+            <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden p-4">
+              <img
+                alt="Generated content"
+                draggable="false"
+                src={selectedItem.previewUrl}
+                className="max-h-full max-w-full rounded-lg object-contain shadow-2xl transition-transform duration-150"
+                style={{ transform: `scale(${zoom})`, transformOrigin: 'center center' }}
+              />
+            </div>
+
+            {/* info sidebar */}
+            <div className={`${sidebarOpen ? 'flex' : 'hidden'} w-full sm:w-80 shrink-0 flex-col overflow-y-auto border-t border-white/[0.06] bg-[#111] sm:border-l sm:border-t-0`}>
+              <div className="flex h-full flex-col text-white">
+                <div className="flex flex-col gap-4 border-b border-white/[0.06] p-5">
                   <div className="flex items-center justify-between">
-                    <p className="mt-1 text-xs">{selectedItem.createdAt}</p>
-                    <div className="flex gap-2">
-                      <a
-                        href={selectedItem.image}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex h-fit w-fit items-center whitespace-nowrap rounded-xl bg-transparent p-1 text-sm font-medium text-foreground transition-all hover:bg-white/60 dark:hover:bg-white/5"
-                        aria-label="Download"
+                    <div>
+                      <p className="text-sm font-medium text-white">{TOOL_LABELS[selectedItem.toolKey] ?? selectedItem.toolKey}</p>
+                      <p className="mt-0.5 text-[11px] text-white/40">{formatTime(selectedItem.createdAtUtc)}</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => downloadImage(selectedItem.previewUrl, `nuladesign-${selectedItem.toolKey}.jpg`)}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+                        aria-label="İndir"
                       >
                         <Download className="h-4 w-4" />
-                      </a>
-                      <a
-                        href={selectedItem.image}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex h-fit w-fit items-center whitespace-nowrap rounded-xl bg-transparent p-1 text-sm font-medium text-foreground transition-all hover:bg-white/60 dark:hover:bg-white/5"
-                        aria-label="Open in new tab"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </a>
-                      <button
-                        type="button"
-                        onClick={() => toggleLike(selectedItem.id)}
-                        className="inline-flex h-fit w-fit items-center whitespace-nowrap rounded-xl p-1 text-sm font-medium text-foreground transition-all hover:bg-white/60 dark:hover:bg-white/5"
-                        aria-label="Like"
-                      >
-                        <Heart className={`h-4 w-4 ${likedIds.includes(selectedItem.id) ? 'fill-current' : ''}`} />
                       </button>
                       <button
                         type="button"
-                        className="inline-flex h-fit w-fit items-center whitespace-nowrap rounded-xl bg-transparent p-1 text-sm font-medium text-foreground transition-all hover:bg-white/60 dark:hover:bg-white/5"
-                        aria-label="Add to Collection"
+                        onClick={() => navigate(`/fashion?tool=${selectedItem.toolKey}`)}
+                        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.06] px-3 text-xs font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white"
                       >
-                        <FolderPlus className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        className="inline-flex h-fit w-fit items-center whitespace-nowrap rounded-xl bg-transparent p-1 text-sm font-medium text-foreground transition-all hover:bg-white/60 dark:hover:bg-white/5"
-                        aria-label="Delete"
-                      >
-                        <Trash2 className="h-4 w-4" />
+                        <Repeat className="h-3 w-3" />
+                        Tekrar üret
                       </button>
                     </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground">Created in</p>
-                    <p className="text-sm font-medium">{selectedItem.tool}</p>
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6">
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <h3 className="mb-3 text-sm font-semibold">Use in</h3>
-                      <div className="flex flex-wrap items-center gap-2">
-                        {toolActions(selectedItem).map((action) => {
-                          const Icon = action.icon
-                          return (
-                            <button
-                              key={action.label}
-                              type="button"
-                              onClick={() => navigate(action.to)}
-                              className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-xl border border-foreground/20 px-3 text-xs font-medium text-muted-foreground shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all hover:border-foreground/35 hover:bg-foreground/[0.04] dark:border-white/[0.12] dark:hover:border-white/20 dark:hover:bg-white/[0.06]"
-                            >
-                              <Icon className="mr-2 h-4 w-4" />
-                              {action.label}
-                            </button>
-                          )
-                        })}
-                      </div>
+                <div className="flex-1 overflow-y-auto p-5 space-y-5">
+                  <div>
+                    <p className="mb-2 text-[10px] uppercase tracking-[0.1em] text-white/30">Şunlarda kullan</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {toolActions(selectedItem).map((action) => {
+                        const Icon = action.icon
+                        return (
+                          <button
+                            key={action.label}
+                            type="button"
+                            onClick={() => { closeViewer(); navigate(action.to) }}
+                            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 text-xs text-white/60 transition-colors hover:bg-white/[0.08] hover:text-white"
+                          >
+                            <Icon className="h-3 w-3" />
+                            {action.label}
+                          </button>
+                        )
+                      })}
                     </div>
+                  </div>
 
-                    <div className="border-b border-border" />
+                  <div className="h-px bg-white/[0.06]" />
 
-                    <div className="space-y-3">
-                      <button
-                        type="button"
-                        onClick={() => navigate('/fashion')}
-                        className="inline-flex h-9 w-full items-center justify-center whitespace-nowrap rounded-xl border border-foreground/20 px-3 text-sm font-medium text-muted-foreground shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all hover:border-foreground/35 hover:bg-foreground/[0.04] dark:border-white/[0.12] dark:hover:border-white/20 dark:hover:bg-white/[0.06]"
-                      >
-                        <Repeat className="mr-2 h-4 w-4" />
-                        Reuse Inputs
-                      </button>
-
-                      <div className="overflow-hidden rounded-lg">
-                        <button
-                          type="button"
-                          onClick={() => setInputsOpen((value) => !value)}
-                          className="flex w-full items-center justify-between rounded-lg bg-muted p-4 text-sm font-semibold"
-                        >
-                          Inputs
-                          <ChevronDown
-                            className={`h-4 w-4 transition-transform duration-200 ${inputsOpen ? 'rotate-180' : ''}`}
-                          />
-                        </button>
-                        {inputsOpen && (
-                          <div className="space-y-3 px-4 py-4 text-sm text-muted-foreground">
-                            <p className="leading-relaxed">{selectedItem.prompt}</p>
-                            <div className="rounded-xl border border-border bg-background/80 p-3">
-                              <p className="text-xs uppercase tracking-[0.16em] text-subtle">Generation ID</p>
-                              <p className="mt-2 break-all font-mono text-xs text-ink dark:text-zinc-200">
-                                {selectedItem.generationId}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
+                  <div>
                     <button
                       type="button"
-                      onClick={() => copyGenerationId(selectedItem.generationId)}
-                      className="flex w-fit items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                      onClick={() => setInputsOpen((v) => !v)}
+                      className="flex w-full items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2.5 text-xs font-medium text-white/60 transition-colors hover:bg-white/[0.08] hover:text-white"
                     >
-                      <Settings className="h-3 w-3" />
-                      Copy Generation ID
+                      Generation ID
+                      <ChevronDown className={`h-3.5 w-3.5 transition-transform ${inputsOpen ? 'rotate-180' : ''}`} />
                     </button>
-
-                    <section className="flex flex-col gap-4">
-                      <div className="flex items-center gap-2">
-                        <h2 className="text-lg font-semibold">Recent Generations</h2>
-                        <Link to="/gallery">
-                          <Images className="h-5 w-5" />
-                        </Link>
+                    {inputsOpen && (
+                      <div className="mt-2 rounded-lg bg-white/[0.03] px-3 py-3">
+                        <p className="break-all font-mono text-[11px] text-white/40 select-all">
+                          {selectedItem.sourceJobId ?? selectedItem.id}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => copyGenerationId(selectedItem.sourceJobId ?? selectedItem.id)}
+                          className="mt-2 text-[10px] text-white/30 transition-colors hover:text-white/60"
+                        >
+                          Kopyala
+                        </button>
                       </div>
-                      <p className="text-sm text-muted-foreground">The most recent results generated through the app.</p>
-                      <div className="grid gap-4 lg:grid-cols-3 xl:grid-cols-5">
+                    )}
+                  </div>
+
+                  {recentItems.length > 0 && (
+                    <div>
+                      <p className="mb-2 text-[10px] uppercase tracking-[0.1em] text-white/30">Son Üretimler</p>
+                      <div className="grid grid-cols-3 gap-1.5">
                         {recentItems.map((item) => (
                           <button
                             key={`recent-${item.id}`}
                             type="button"
-                            onClick={() => {
-                              setSelectedId(item.id)
-                              setZoom(1)
-                            }}
-                            className="group relative block aspect-[3/4] w-full overflow-hidden rounded-xl bg-muted transition-all duration-200 ease-out hover:scale-[1.02] hover:shadow-lg"
+                            onClick={() => { setSelectedId(item.id); setZoom(1) }}
+                            className={`group relative aspect-[3/4] overflow-hidden rounded-lg transition-all ${item.id === selectedId ? 'ring-2 ring-white/60' : 'opacity-60 hover:opacity-100'}`}
                           >
                             <img
-                              alt={`Generated from ${item.tool}`}
-                              className="block aspect-[3/4] h-auto w-full rounded-xl object-cover transition-transform duration-300 group-hover:scale-105"
-                              src={item.image}
+                              alt={TOOL_LABELS[item.toolKey] ?? item.toolKey}
+                              src={item.previewUrl}
+                              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                            <div className="absolute bottom-0 left-0 right-0 p-3 text-left text-white opacity-0 transition-opacity group-hover:opacity-100">
-                              <p className="text-xs font-medium">{item.tool}</p>
-                            </div>
                           </button>
                         ))}
                       </div>
-                    </section>
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </main>
   )

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 
-const STORAGE_KEY = 'vibedesign-theme'
+const STORAGE_KEY = 'nuladesign-theme'
 
 const ThemeContext = createContext(null)
 

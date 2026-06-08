@@ -10,7 +10,7 @@ const steps = [
     title: 'Modelinizi yaratın',
     subtitle: 'Tamamen sizin.',
     desc: 'Yüz yapısı, ten rengi, saç stili, vücut tipi — markanızın DNA\'sına uygun sanal modeller, saniyeler içinde.',
-    img: 'https://images.unsplash.com/photo-1529625665599-3c9a6e1189f5?w=600&q=85',
+    img: 'https://images.unsplash.com/photo-1506629905607-d9f786ae6a2f?w=600&q=85',
   },
   {
     icon: Shirt,
@@ -19,7 +19,7 @@ const steps = [
     title: 'Kıyafeti giydirin',
     subtitle: 'Tam istediğiniz gibi.',
     desc: 'Kumaş kıvrımları, gölgeler, ışık yansımaları — gerçek bir çekim gibi, saniyeler içinde.',
-    img: 'https://images.unsplash.com/photo-1483985988350-763728e3685b?w=600&q=85',
+    img: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&q=85',
   },
   {
     icon: MapPin,

@@ -6,6 +6,7 @@ public sealed class ToolDefinition
     public string ToolKey { get; set; } = string.Empty;
     public string Workspace { get; set; } = "cekim";
     public string Label { get; set; } = string.Empty;
+    public string Quality { get; set; } = "1k"; // 1k | 2k | 4k
     public int CreditCost { get; set; }
     public bool IsNew { get; set; }
     public bool IsActive { get; set; } = true;

@@ -1,13 +1,30 @@
 using Fashion.Api.Data;
 using Fashion.Api.Models;
 using Fashion.Api.Security;
+using Fashion.Api.Services;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var useInMemoryDb = builder.Configuration.GetValue("Database:UseInMemory", false);
+
 builder.Services.AddOpenApi();
+builder.Services.AddHttpClient<FashnService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Fashn:BaseUrl"] ?? "https://api.fashn.ai");
+});
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    if (useInMemoryDb)
+    {
+        options.UseInMemoryDatabase("FashionDev");
+    }
+    else
+    {
+        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+    }
+});
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendDev", policy =>
@@ -34,11 +51,19 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("FrontendDev");
 
-// Simple auto-migration for local development.
+// DB init: migrations (PostgreSQL) or EnsureCreated (in-memory dev).
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();
+    if (useInMemoryDb)
+    {
+        await db.Database.EnsureCreatedAsync();
+    }
+    else
+    {
+        await db.Database.MigrateAsync();
+    }
+
     await SeedData.InitializeAsync(db);
 }
 
@@ -186,11 +211,14 @@ app.MapGet("/api/tools", async (string? workspace, AppDbContext db) =>
     var tools = await query
         .OrderBy(t => t.Workspace)
         .ThenBy(t => t.Label)
+        .ThenBy(t => t.Quality)
         .Select(t => new
         {
+            t.Id,
             t.ToolKey,
             t.Workspace,
             t.Label,
+            t.Quality,
             t.CreditCost,
             t.IsNew
         })
@@ -260,7 +288,7 @@ app.MapDelete("/api/me/{userId:guid}", async (Guid userId, AppDbContext db) =>
     return Results.Ok(new { message = "Hesap silindi." });
 });
 
-app.MapPost("/api/jobs", async (CreateJobRequest request, AppDbContext db) =>
+app.MapPost("/api/jobs", async (CreateJobRequest request, AppDbContext db, FashnService fashn) =>
 {
     var user = await db.Users.FirstOrDefaultAsync(x => x.Id == request.UserId);
     if (user is null)
@@ -268,20 +296,32 @@ app.MapPost("/api/jobs", async (CreateJobRequest request, AppDbContext db) =>
         return Results.NotFound(new { message = "User not found." });
     }
 
+    var modelName = FashnModelMap.Resolve(request.ToolKey);
+    if (modelName is null)
+    {
+        return Results.BadRequest(new { message = $"Bilinmeyen tool: {request.ToolKey}" });
+    }
+
+    var (creditCost, creditError) = await ToolCreditCalculator.ResolveAsync(db, request.ToolKey, request.Inputs);
+    if (creditError is not null)
+    {
+        return Results.BadRequest(new { message = creditError });
+    }
+
     var wallet = await db.CreditWallets.FirstAsync(x => x.UserId == user.Id);
-    if (wallet.Balance < request.CreditCost)
+    if (wallet.Balance < creditCost)
     {
         return Results.BadRequest(new { message = "Yetersiz kredi." });
     }
 
-    wallet.Balance -= request.CreditCost;
+    wallet.Balance -= creditCost;
 
     var job = new GenerationJob
     {
         UserId = user.Id,
         ToolKey = request.ToolKey,
         Prompt = request.Prompt,
-        CreditCost = request.CreditCost,
+        CreditCost = creditCost,
         Status = JobStatus.Queued
     };
 
@@ -289,14 +329,128 @@ app.MapPost("/api/jobs", async (CreateJobRequest request, AppDbContext db) =>
     db.CreditTransactions.Add(new CreditTransaction
     {
         UserId = user.Id,
-        Amount = -request.CreditCost,
+        Amount = -creditCost,
         Type = CreditTransactionType.Spend,
         Description = $"Generation reserved for {request.ToolKey}"
     });
 
     await db.SaveChangesAsync();
 
-    return Results.Created($"/api/jobs/{job.Id}", new { job.Id, job.Status, RemainingCredits = wallet.Balance });
+    // FASHN API çağrısı
+    var fashnResult = await fashn.RunAsync(modelName, request.Inputs);
+
+    if (!fashnResult.IsSuccess)
+    {
+        // Hata durumunda krediyi iade et
+        job.Status = JobStatus.Failed;
+        job.ErrorMessage = fashnResult.Error;
+        wallet.Balance += creditCost;
+        db.CreditTransactions.Add(new CreditTransaction
+        {
+            UserId = user.Id,
+            Amount = creditCost,
+            Type = CreditTransactionType.Refund,
+            Description = $"Refund — FASHN error: {fashnResult.Error?[..Math.Min(200, fashnResult.Error.Length)]}"
+        });
+        await db.SaveChangesAsync();
+        return Results.UnprocessableEntity(new { message = "AI servisine ulaşılamadı.", detail = fashnResult.Error });
+    }
+
+    job.FashnJobId = fashnResult.Id;
+    job.Status = JobStatus.Running;
+    await db.SaveChangesAsync();
+
+    return Results.Created($"/api/jobs/{job.Id}", new
+    {
+        job.Id,
+        job.FashnJobId,
+        Status = job.Status.ToString(),
+        RemainingCredits = wallet.Balance
+    });
+});
+
+app.MapGet("/api/jobs/{id:guid}/status", async (Guid id, AppDbContext db, FashnService fashn) =>
+{
+    var job = await db.GenerationJobs.FirstOrDefaultAsync(x => x.Id == id);
+    if (job is null)
+    {
+        return Results.NotFound(new { message = "Job bulunamadı." });
+    }
+
+    // Zaten tamamlanmışsa doğrudan dön
+    if (job.Status is JobStatus.Completed or JobStatus.Failed)
+    {
+        return Results.Ok(new
+        {
+            job.Id,
+            Status = job.Status.ToString(),
+            ResultUrls = job.ResultUrls is not null
+                ? JsonSerializer.Deserialize<List<string>>(job.ResultUrls)
+                : null,
+            job.ErrorMessage,
+            job.CompletedAtUtc
+        });
+    }
+
+    if (job.FashnJobId is null)
+    {
+        return Results.Ok(new { job.Id, Status = job.Status.ToString(), ResultUrls = (object?)null, job.ErrorMessage });
+    }
+
+    var fashnStatus = await fashn.GetStatusAsync(job.FashnJobId);
+
+    if (fashnStatus.IsCompleted)
+    {
+        job.Status = JobStatus.Completed;
+        job.CompletedAtUtc = DateTime.UtcNow;
+        job.ResultUrls = JsonSerializer.Serialize(fashnStatus.Outputs ?? []);
+
+        // Galeriye ekle
+        if (fashnStatus.Outputs?.Count > 0)
+        {
+            db.GalleryItems.Add(new GalleryItem
+            {
+                UserId = job.UserId,
+                SourceJobId = job.Id,
+                ToolKey = job.ToolKey,
+                PreviewUrl = fashnStatus.Outputs[0]
+            });
+        }
+
+        await db.SaveChangesAsync();
+    }
+    else if (fashnStatus.IsFailed)
+    {
+        job.Status = JobStatus.Failed;
+        job.CompletedAtUtc = DateTime.UtcNow;
+        job.ErrorMessage = fashnStatus.ErrorMessage;
+
+        // Kredi iadesi
+        var wallet = await db.CreditWallets.FirstOrDefaultAsync(x => x.UserId == job.UserId);
+        if (wallet is not null)
+        {
+            wallet.Balance += job.CreditCost;
+            db.CreditTransactions.Add(new CreditTransaction
+            {
+                UserId = job.UserId,
+                Amount = job.CreditCost,
+                Type = CreditTransactionType.Refund,
+                Description = $"Refund — job {job.Id} başarısız oldu"
+            });
+        }
+
+        await db.SaveChangesAsync();
+    }
+
+    return Results.Ok(new
+    {
+        job.Id,
+        Status = job.Status.ToString(),
+        FashnStatus = fashnStatus.Status,
+        ResultUrls = fashnStatus.Outputs,
+        ErrorMessage = fashnStatus.ErrorMessage ?? job.ErrorMessage,
+        job.CompletedAtUtc
+    });
 });
 
 app.MapGet("/api/gallery", async (Guid userId, AppDbContext db) =>
@@ -370,6 +524,19 @@ app.MapGet("/api/changelog", async (AppDbContext db) =>
     return Results.Ok(entries);
 });
 
+app.MapGet("/api/tools/{toolKey}/pricing", async (string toolKey, AppDbContext db) =>
+{
+    var qualities = await db.ToolDefinitions
+        .Where(t => t.ToolKey == toolKey && t.IsActive)
+        .OrderBy(t => t.Quality)
+        .Select(t => new { t.Quality, t.CreditCost, t.Label })
+        .ToListAsync();
+
+    return qualities.Count == 0
+        ? Results.NotFound()
+        : Results.Ok(new { toolKey, qualities });
+});
+
 app.MapGet("/api/docs/support", () => Results.Ok(new[]
 {
     new { title = "Başlangıç", body = "Giriş yaptıktan sonra bir tool seçip Oluştur ile job başlatın." },
@@ -379,7 +546,7 @@ app.MapGet("/api/docs/support", () => Results.Ok(new[]
 
 app.Run();
 
-public sealed record CreateJobRequest(Guid UserId, string ToolKey, string Prompt, int CreditCost);
+public sealed record CreateJobRequest(Guid UserId, string ToolKey, string Prompt, int CreditCost, JsonElement Inputs);
 public sealed record RegisterRequest(string Email, string Name, string Password);
 public sealed record LoginRequest(string EmailOrUsername, string Password);
 public sealed record UpdateMeRequest(string DisplayName);

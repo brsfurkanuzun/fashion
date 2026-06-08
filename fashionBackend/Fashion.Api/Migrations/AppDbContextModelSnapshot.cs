@@ -17,7 +17,7 @@ namespace Fashion.Api.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.8")
+                .HasAnnotation("ProductVersion", "9.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -139,16 +139,31 @@ namespace Fashion.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("CreditCost")
                         .HasColumnType("integer");
 
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("FashnJobId")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
                     b.Property<string>("Prompt")
                         .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("ResultUrls")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -162,6 +177,8 @@ namespace Fashion.Api.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("FashnJobId");
 
                     b.HasIndex("Status");
 
@@ -193,6 +210,11 @@ namespace Fashion.Api.Migrations
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
 
+                    b.Property<string>("Quality")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("character varying(4)");
+
                     b.Property<string>("ToolKey")
                         .IsRequired()
                         .HasMaxLength(80)
@@ -205,7 +227,7 @@ namespace Fashion.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ToolKey")
+                    b.HasIndex("ToolKey", "Quality")
                         .IsUnique();
 
                     b.ToTable("ToolDefinitions");

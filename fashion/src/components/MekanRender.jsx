@@ -4,7 +4,7 @@ import SectionLabel from './SectionLabel'
 
 const products = [
   { icon: Sofa, name: 'Tekli Koltuk', material: 'Deri — Modern', img: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=300&q=85' },
-  { icon: Wine, name: 'Bardak Seti', material: 'Cam — Dekoratif', img: 'https://images.unsplash.com/photo-1578508133497-8b23f20690c2?w=300&q=85' },
+  { icon: Wine, name: 'Bardak Seti', material: 'Cam — Dekoratif', img: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&q=85' },
   { icon: Armchair, name: 'İkili Kanepe', material: 'Kumaş — Bohemian', img: 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=300&q=85' },
 ]
 

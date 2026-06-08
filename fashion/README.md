@@ -1,6 +1,6 @@
-# vibedesign — AI Moda Görsel Üretimi
+# nuladesign — AI Moda Görsel Üretimi
 
-[vibedesignapp.com](https://vibedesignapp.com/) benzeri React landing page.
+AI moda görsel üretimi için React arayüzü.
 
 ## Kurulum
 

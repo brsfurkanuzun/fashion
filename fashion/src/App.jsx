@@ -10,7 +10,6 @@ import SupportPage from './pages/SupportPage'
 import AccountPage from './pages/AccountPage'
 import BillingPage from './pages/BillingPage'
 import ChangelogPage from './pages/ChangelogPage'
-
 export default function App() {
   const [loginOpen, setLoginOpen] = useState(false)
 

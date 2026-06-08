@@ -49,8 +49,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => x.UserId);
             entity.HasIndex(x => x.Status);
+            entity.HasIndex(x => x.FashnJobId);
             entity.Property(x => x.ToolKey).HasMaxLength(60);
             entity.Property(x => x.Prompt).HasMaxLength(2000);
+            entity.Property(x => x.FashnJobId).HasMaxLength(120);
+            entity.Property(x => x.ErrorMessage).HasMaxLength(1000);
+            entity.Property(x => x.ResultUrls).HasMaxLength(4000);
             entity.HasOne(x => x.User)
                 .WithMany(x => x.GenerationJobs)
                 .HasForeignKey(x => x.UserId);
@@ -70,10 +74,11 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         modelBuilder.Entity<ToolDefinition>(entity =>
         {
             entity.HasKey(x => x.Id);
-            entity.HasIndex(x => x.ToolKey).IsUnique();
+            entity.HasIndex(x => new { x.ToolKey, x.Quality }).IsUnique();
             entity.Property(x => x.ToolKey).HasMaxLength(80);
             entity.Property(x => x.Workspace).HasMaxLength(40);
             entity.Property(x => x.Label).HasMaxLength(120);
+            entity.Property(x => x.Quality).HasMaxLength(4);
         });
 
         modelBuilder.Entity<ChangelogEntry>(entity =>
@@ -83,5 +88,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(x => x.Type).HasMaxLength(40);
             entity.Property(x => x.Summary).HasMaxLength(2000);
         });
+
     }
 }

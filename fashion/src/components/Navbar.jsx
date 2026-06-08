@@ -43,7 +43,7 @@ export default function Navbar({ onOpenLogin }) {
           to="/"
           className="font-serif text-[1.35rem] tracking-tight text-ink cursor-pointer hover:opacity-80 transition-opacity duration-200"
         >
-          vibedesign
+          nuladesign
         </Link>
 
         <nav className="hidden lg:flex items-center gap-8" aria-label="Ana menü">

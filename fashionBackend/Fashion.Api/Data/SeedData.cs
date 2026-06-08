@@ -6,6 +6,51 @@ namespace Fashion.Api.Data;
 
 public static class SeedData
 {
+    private static IEnumerable<ToolDefinition> ToolRows(string key, string ws, string label, int cost1k, int cost2k, int cost4k, bool isNew = false)
+    {
+        yield return new ToolDefinition { ToolKey = key, Workspace = ws, Label = label, Quality = "1k", CreditCost = cost1k, IsNew = isNew };
+        yield return new ToolDefinition { ToolKey = key, Workspace = ws, Label = label, Quality = "2k", CreditCost = cost2k, IsNew = isNew };
+        yield return new ToolDefinition { ToolKey = key, Workspace = ws, Label = label, Quality = "4k", CreditCost = cost4k, IsNew = isNew };
+    }
+
+    private static IEnumerable<ToolDefinition> ToolRowsScaled(string key, string ws, string label, int base2k)
+        => ToolRows(key, ws, label, (int)Math.Round(base2k * 0.6), base2k, (int)Math.Round(base2k * 1.5));
+
+    private static readonly string[] ExpectedQualities = ["1k", "2k", "4k"];
+
+    private static IEnumerable<ToolDefinition> AllToolRows()
+        =>
+        [
+            ..ToolRowsScaled("cekim-model", "cekim", "MODEL\\TRY ON", 40),
+            ..ToolRowsScaled("cekim-editorial", "cekim", "EDITORIAL", 55),
+            ..ToolRowsScaled("cekim-pose", "cekim", "POSE", 30),
+            ..ToolRowsScaled("cekim-video", "cekim", "VIDEO", 80),
+            ..ToolRowsScaled("pro-model", "produksiyon", "MODEL", 150),
+            ..ToolRows("pro-tryon", "produksiyon", "TRY ON", 6, 9, 12),
+            ..ToolRowsScaled("pro-edit", "produksiyon", "EDIT", 95),
+            ..ToolRows("pro-decoupe", "produksiyon", "DECOUPE", 6, 9, 12),
+            ..ToolRowsScaled("pro-editorial", "produksiyon", "EDITORIAL", 110),
+            ..ToolRowsScaled("pro-moodboard", "produksiyon", "MOODBOARD", 65),
+            ..ToolRowsScaled("pro-swap", "produksiyon", "SWAP", 90),
+            ..ToolRowsScaled("pro-pose", "produksiyon", "POSE", 70),
+            ..ToolRowsScaled("pro-angle", "produksiyon", "ANGLE", 60),
+            ..ToolRowsScaled("pro-video", "produksiyon", "VIDEO", 180),
+        ];
+
+    private static async Task<bool> NeedsToolReseedAsync(AppDbContext db)
+    {
+        var rows = await db.ToolDefinitions
+            .GroupBy(t => t.ToolKey)
+            .Select(g => new { ToolKey = g.Key, Qualities = g.Select(t => t.Quality).ToList() })
+            .ToListAsync();
+
+        if (rows.Count != 14)
+            return true;
+
+        return rows.Any(r =>
+            ExpectedQualities.Any(q => !r.Qualities.Contains(q)));
+    }
+
     public static async Task InitializeAsync(AppDbContext db)
     {
         var admin = await db.Users.FirstOrDefaultAsync(x => x.Email == "admin@fashion.local");
@@ -39,24 +84,10 @@ public static class SeedData
             admin.PasswordHash = PasswordHasher.Hash("admin");
         }
 
-        if (!await db.ToolDefinitions.AnyAsync())
+        if (await NeedsToolReseedAsync(db))
         {
-            db.ToolDefinitions.AddRange(
-                new ToolDefinition { ToolKey = "cekim-model", Workspace = "cekim", Label = "MODEL\\TRY ON", CreditCost = 40 },
-                new ToolDefinition { ToolKey = "cekim-editorial", Workspace = "cekim", Label = "EDITORIAL", CreditCost = 55 },
-                new ToolDefinition { ToolKey = "cekim-pose", Workspace = "cekim", Label = "POSE", CreditCost = 30 },
-                new ToolDefinition { ToolKey = "cekim-video", Workspace = "cekim", Label = "VIDEO", CreditCost = 80 },
-                new ToolDefinition { ToolKey = "pro-model", Workspace = "produksiyon", Label = "MODEL", CreditCost = 150 },
-                new ToolDefinition { ToolKey = "pro-tryon", Workspace = "produksiyon", Label = "TRY ON", CreditCost = 120 },
-                new ToolDefinition { ToolKey = "pro-edit", Workspace = "produksiyon", Label = "EDIT", CreditCost = 95 },
-                new ToolDefinition { ToolKey = "pro-decoupe", Workspace = "produksiyon", Label = "DECOUPE", CreditCost = 45 },
-                new ToolDefinition { ToolKey = "pro-editorial", Workspace = "produksiyon", Label = "EDITORIAL", CreditCost = 110 },
-                new ToolDefinition { ToolKey = "pro-moodboard", Workspace = "produksiyon", Label = "MOODBOARD", CreditCost = 65 },
-                new ToolDefinition { ToolKey = "pro-swap", Workspace = "produksiyon", Label = "SWAP", CreditCost = 90 },
-                new ToolDefinition { ToolKey = "pro-pose", Workspace = "produksiyon", Label = "POSE", CreditCost = 70 },
-                new ToolDefinition { ToolKey = "pro-angle", Workspace = "produksiyon", Label = "ANGLE", CreditCost = 60 },
-                new ToolDefinition { ToolKey = "pro-video", Workspace = "produksiyon", Label = "VIDEO", CreditCost = 180 }
-            );
+            db.ToolDefinitions.RemoveRange(await db.ToolDefinitions.ToListAsync());
+            db.ToolDefinitions.AddRange(AllToolRows());
         }
 
         if (!await db.ChangelogEntries.AnyAsync())

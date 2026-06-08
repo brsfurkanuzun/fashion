@@ -6,7 +6,7 @@ const details = [
   {
     title: 'Editöryal Sahne',
     desc: 'Kayalık sahil, doğal ışık',
-    img: 'https://images.unsplash.com/photo-1515886657611-9c9bdaddf416?w=500&q=85',
+    img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500&q=85',
     span: 'col-span-2 row-span-2',
   },
   {
@@ -18,13 +18,13 @@ const details = [
   {
     title: 'Sırt Detayı',
     desc: 'Çapraz askı ve sırt dekoltesi',
-    img: 'https://images.unsplash.com/photo-1496747611176-843222e1e14c?w=400&q=85',
+    img: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&q=85',
     span: 'col-span-1',
   },
   {
     title: 'Etek Detayı',
     desc: 'Boncuk dağılımı ve kumaş dokusu',
-    img: 'https://images.unsplash.com/photo-1539008835657-9e8e96875951?w=400&q=85',
+    img: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&q=85',
     span: 'col-span-2',
   },
 ]

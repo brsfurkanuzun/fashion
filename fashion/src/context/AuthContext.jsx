@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 
-const STORAGE_KEY = 'vibedesign-auth'
+const STORAGE_KEY = 'nuladesign-auth'
 
 const AuthContext = createContext(null)
 

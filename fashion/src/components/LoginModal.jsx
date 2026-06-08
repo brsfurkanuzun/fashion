@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { X, Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5207'
+import { apiUrl } from '@/lib/api'
 
 const MODES = {
   login: {
@@ -133,7 +132,7 @@ export default function LoginModal({ open, onClose }) {
 
     if (mode === 'register') {
       try {
-        const registerResponse = await fetch(`${API_BASE_URL}/api/auth/register`, {
+        const registerResponse = await fetch(apiUrl('/api/auth/register'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -161,7 +160,7 @@ export default function LoginModal({ open, onClose }) {
     }
 
     try {
-      const loginResponse = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const loginResponse = await fetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -239,7 +238,7 @@ export default function LoginModal({ open, onClose }) {
           <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-champagne/5 blur-3xl" />
 
           <div className="relative">
-            <span className="font-serif text-2xl tracking-tight">vibedesign</span>
+            <span className="font-serif text-2xl tracking-tight">nuladesign</span>
           </div>
 
           <div className="relative">
@@ -257,7 +256,7 @@ export default function LoginModal({ open, onClose }) {
             </p>
           </div>
 
-          <p className="relative text-xs text-subtle">© vibedesign</p>
+          <p className="relative text-xs text-subtle">© nuladesign</p>
         </div>
 
         {/* Sağ panel — form */}
@@ -280,7 +279,7 @@ export default function LoginModal({ open, onClose }) {
           ) : (
             <>
               <div className="lg:hidden mb-8">
-                <span className="font-serif text-xl">vibedesign</span>
+                <span className="font-serif text-xl">nuladesign</span>
               </div>
 
               <h2 id="auth-title" className="font-serif text-2xl sm:text-3xl tracking-tight pr-8">
