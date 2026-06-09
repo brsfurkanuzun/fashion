@@ -6,7 +6,7 @@ import Footer from './Footer'
 import LoginModal from './LoginModal'
 import { useAuth } from '../context/AuthContext'
 
-export default function Layout({ loginOpen, onOpenLogin, onCloseLogin }) {
+export default function Layout({ loginOpen, loginInitialMode, onOpenLogin, onCloseLogin }) {
   const location = useLocation()
   const { isAuthenticated } = useAuth()
   const studioPaths = ['/fashion', '/gallery', '/support', '/account', '/billing']
@@ -23,10 +23,10 @@ export default function Layout({ loginOpen, onOpenLogin, onCloseLogin }) {
         <Navbar onOpenLogin={onOpenLogin} />
       )}
       <main className={isFashionStudio ? 'lg:pr-[68px]' : ''}>
-        <Outlet />
+        <Outlet context={{ openLogin: onOpenLogin }} />
       </main>
-      {!isFashionStudio && <Footer />}
-      <LoginModal open={loginOpen} onClose={onCloseLogin} />
+      {!isFashionStudio && <Footer onOpenLogin={onOpenLogin} />}
+      <LoginModal open={loginOpen} onClose={onCloseLogin} initialMode={loginInitialMode} />
     </div>
   )
 }

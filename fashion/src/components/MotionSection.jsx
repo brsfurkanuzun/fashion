@@ -1,4 +1,5 @@
 import { Play, Film } from 'lucide-react'
+import { homeImages } from '../data/homeImages'
 import Reveal from './Reveal'
 import SectionLabel from './SectionLabel'
 
@@ -41,7 +42,7 @@ export default function MotionSection() {
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div className="image-frame aspect-[3/4]">
                 <img
-                  src="https://images.unsplash.com/photo-1595777457583-95e0591ff7f0?w=400&q=85"
+                  src={homeImages.heroProduct}
                   alt="Kaynak fotoğraf"
                   className="w-full h-full object-cover"
                   loading="lazy"
@@ -53,7 +54,7 @@ export default function MotionSection() {
               </div>
               <div className="image-frame aspect-[3/4] relative group">
                 <img
-                  src="https://images.unsplash.com/photo-1469334031218-e042a776e18b?w=400&q=85"
+                  src={homeImages.heroEditorial}
                   alt="Motion çıktısı"
                   className="w-full h-full object-cover"
                   loading="lazy"

@@ -1,4 +1,5 @@
 import { User, Shirt, MapPin } from 'lucide-react'
+import { homeImages } from '../data/homeImages'
 import Reveal from './Reveal'
 import SectionLabel from './SectionLabel'
 
@@ -10,7 +11,7 @@ const steps = [
     title: 'Modelinizi yaratın',
     subtitle: 'Tamamen sizin.',
     desc: 'Yüz yapısı, ten rengi, saç stili, vücut tipi — markanızın DNA\'sına uygun sanal modeller, saniyeler içinde.',
-    img: 'https://images.unsplash.com/photo-1506629905607-d9f786ae6a2f?w=600&q=85',
+    img: homeImages.stepStudio,
   },
   {
     icon: Shirt,
@@ -19,7 +20,7 @@ const steps = [
     title: 'Kıyafeti giydirin',
     subtitle: 'Tam istediğiniz gibi.',
     desc: 'Kumaş kıvrımları, gölgeler, ışık yansımaları — gerçek bir çekim gibi, saniyeler içinde.',
-    img: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&q=85',
+    img: homeImages.stepShopping,
   },
   {
     icon: MapPin,
@@ -28,7 +29,7 @@ const steps = [
     title: 'Sahneye yerleştirin',
     subtitle: 'Hayal edin, gerçek olsun.',
     desc: 'Kayalık sahiller, şehir sokakları, profesyonel stüdyo — modelinizi istediğiniz ortamda konumlandırın.',
-    img: 'https://images.unsplash.com/photo-1469334031218-e042a776e18b?w=600&q=85',
+    img: homeImages.stepRunway,
   },
 ]
 

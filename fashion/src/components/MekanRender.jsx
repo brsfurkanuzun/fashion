@@ -1,11 +1,12 @@
 import { Sofa, Wine, Armchair } from 'lucide-react'
+import { homeImages } from '../data/homeImages'
 import Reveal from './Reveal'
 import SectionLabel from './SectionLabel'
 
 const products = [
-  { icon: Sofa, name: 'Tekli Koltuk', material: 'Deri — Modern', img: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=300&q=85' },
-  { icon: Wine, name: 'Bardak Seti', material: 'Cam — Dekoratif', img: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&q=85' },
-  { icon: Armchair, name: 'İkili Kanepe', material: 'Kumaş — Bohemian', img: 'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=300&q=85' },
+  { icon: Sofa, name: 'Tekli Koltuk', material: 'Deri — Modern', img: homeImages.mekanChair },
+  { icon: Wine, name: 'Bardak Seti', material: 'Cam — Dekoratif', img: homeImages.mekanGlass },
+  { icon: Armchair, name: 'İkili Kanepe', material: 'Kumaş — Bohemian', img: homeImages.mekanSofa },
 ]
 
 export default function MekanRender() {
@@ -51,7 +52,7 @@ export default function MekanRender() {
           <div className="mt-12 grid md:grid-cols-2 gap-4">
             <div className="image-frame aspect-video group">
               <img
-                src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=700&q=85"
+                src={homeImages.mekanChair}
                 alt="Kaynak ürün"
                 className="w-full h-full object-cover"
                 loading="lazy"
@@ -63,13 +64,13 @@ export default function MekanRender() {
             </div>
             <div className="image-frame aspect-video group">
               <img
-                src="https://images.unsplash.com/photo-1618221195710-e326f1269a1a?w=700&q=85"
+                src={homeImages.mekanRoom}
                 alt="Mekan render"
                 className="w-full h-full object-cover"
                 loading="lazy"
               />
               <div className="absolute bottom-5 left-5">
-                <p className="text-[0.6rem] uppercase tracking-wider text-champagne">AI Render</p>
+                <p className="text-[0.6rem] uppercase tracking-wider text-champagne">Render</p>
                 <p className="text-sm font-medium">Yaşam alanı</p>
               </div>
             </div>

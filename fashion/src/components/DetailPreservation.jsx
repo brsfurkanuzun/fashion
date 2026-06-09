@@ -1,4 +1,5 @@
 import { Shield } from 'lucide-react'
+import { homeImages } from '../data/homeImages'
 import Reveal from './Reveal'
 import SectionLabel from './SectionLabel'
 
@@ -6,25 +7,25 @@ const details = [
   {
     title: 'Editöryal Sahne',
     desc: 'Kayalık sahil, doğal ışık',
-    img: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500&q=85',
+    img: homeImages.detail01,
     span: 'col-span-2 row-span-2',
   },
   {
     title: 'İşleme Detayı',
     desc: 'Boncuk işlemeler birebir korundu',
-    img: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=85',
+    img: homeImages.detail02,
     span: 'col-span-1',
   },
   {
     title: 'Sırt Detayı',
     desc: 'Çapraz askı ve sırt dekoltesi',
-    img: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400&q=85',
+    img: homeImages.detail03,
     span: 'col-span-1',
   },
   {
     title: 'Etek Detayı',
     desc: 'Boncuk dağılımı ve kumaş dokusu',
-    img: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&q=85',
+    img: homeImages.detail04,
     span: 'col-span-2',
   },
 ]
@@ -84,7 +85,7 @@ export default function DetailPreservation() {
           <div className="mt-12 grid md:grid-cols-2 gap-6 items-center glass-card rounded-2xl p-6 sm:p-8">
             <div className="image-frame aspect-square max-w-xs mx-auto md:mx-0">
               <img
-                src="https://images.unsplash.com/photo-1595777457583-95e0591ff7f0?w=500&q=85"
+                src={homeImages.heroProduct}
                 alt="Orijinal ürün"
                 className="w-full h-full object-cover"
               />

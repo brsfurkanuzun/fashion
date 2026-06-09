@@ -867,7 +867,7 @@ function ResultPreview({ tool, config, isGenerating, resultImages }) {
           </div>
 
           <div className="rounded-2xl border border-black/[0.05] bg-[var(--elevated)]/75 p-3 backdrop-blur dark:border-white/[0.08] dark:bg-black/15">
-            <p className="text-[10px] uppercase tracking-[0.08em] text-champagne-dim">Fashion AI Output</p>
+            <p className="text-[10px] uppercase tracking-[0.08em] text-champagne-dim">Çıktı</p>
             <h3 className="mt-1 text-sm font-medium tracking-[-0.02em] text-ink dark:text-white">{config.previewTitle}</h3>
             <p className="mt-1 text-[11px] leading-5 text-muted">{config.previewNote}</p>
           </div>
@@ -1043,7 +1043,7 @@ function ModelResultPreview({ tool, config, isGenerating, resultImages }) {
           </div>
 
           <div className="rounded-2xl border border-black/[0.05] bg-[var(--elevated)]/75 p-3 backdrop-blur dark:border-white/[0.08] dark:bg-black/15">
-            <p className="text-[10px] uppercase tracking-[0.08em] text-champagne-dim">Fashion AI Output</p>
+            <p className="text-[10px] uppercase tracking-[0.08em] text-champagne-dim">Çıktı</p>
             <h3 className="mt-1 text-sm font-medium tracking-[-0.02em] text-ink dark:text-white">{config.previewTitle}</h3>
             <p className="mt-1 text-[11px] leading-5 text-muted">{config.previewNote}</p>
           </div>

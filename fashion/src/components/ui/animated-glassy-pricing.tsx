@@ -161,6 +161,8 @@ export interface PricingCardProps {
   description: string
   price: string
   priceSuffix?: string
+  /** Varsayılan fiyat satırı yerine (ör. slider + dinamik tutar) */
+  priceSection?: ReactNode
   features: string[]
   buttonText: string
   isPopular?: boolean
@@ -173,6 +175,7 @@ export const PricingCard = ({
   description,
   price,
   priceSuffix = '/ay',
+  priceSection,
   features,
   buttonText,
   isPopular = false,
@@ -205,9 +208,15 @@ export const PricingCard = ({
         <h2 className="text-[48px] font-extralight tracking-[-0.03em] text-foreground font-display">{planName}</h2>
         <p className="text-[16px] text-foreground/70 mt-1 font-sans">{description}</p>
       </div>
-      <div className="my-6 flex items-baseline gap-2">
-        <span className="text-[48px] font-extralight text-foreground font-display">{price}</span>
-        {priceSuffix && <span className="text-[14px] text-foreground/70 font-sans">{priceSuffix}</span>}
+      <div className="my-6 w-full">
+        {priceSection ? (
+          priceSection
+        ) : (
+          <div className="flex items-baseline gap-2">
+            <span className="text-[48px] font-extralight text-foreground font-display">{price}</span>
+            {priceSuffix && <span className="text-[14px] text-foreground/70 font-sans">{priceSuffix}</span>}
+          </div>
+        )}
       </div>
       <div className="card-divider w-full mb-5 h-px bg-[linear-gradient(90deg,transparent,rgba(0,0,0,0.1)_50%,transparent)] dark:bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.09)_20%,rgba(255,255,255,0.22)_50%,rgba(255,255,255,0.09)_80%,transparent)]" />
       <ul className="flex flex-col gap-2 text-[14px] text-foreground/90 mb-6 font-sans">

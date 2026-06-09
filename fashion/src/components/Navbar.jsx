@@ -41,7 +41,7 @@ export default function Navbar({ onOpenLogin }) {
       <div className="max-w-[1400px] mx-auto px-5 sm:px-8 flex items-center justify-between">
         <Link
           to="/"
-          className="font-serif text-[1.35rem] tracking-tight text-ink cursor-pointer hover:opacity-80 transition-opacity duration-200"
+          className="font-serif text-[1.5rem] sm:text-[1.55rem] tracking-tight text-ink cursor-pointer hover:opacity-80 transition-opacity duration-200"
         >
           nuladesign
         </Link>
@@ -51,7 +51,7 @@ export default function Navbar({ onOpenLogin }) {
             <Link
               key={l.to}
               to={l.to}
-              className={`text-[0.8125rem] transition-colors duration-200 cursor-pointer ${
+              className={`text-[0.9375rem] transition-colors duration-200 cursor-pointer ${
                 location.pathname === l.to
                   ? 'text-champagne'
                   : 'text-muted hover:text-ink'
@@ -68,7 +68,7 @@ export default function Navbar({ onOpenLogin }) {
             <>
               <Link
                 to="/fashion"
-                className={`text-[0.8125rem] px-4 py-2 transition-colors duration-200 cursor-pointer ${
+                className={`text-[0.9375rem] px-4 py-2 transition-colors duration-200 cursor-pointer ${
                   location.pathname === '/fashion' ? 'text-champagne' : 'text-muted hover:text-ink'
                 }`}
               >
@@ -77,7 +77,7 @@ export default function Navbar({ onOpenLogin }) {
               <button
                 type="button"
                 onClick={logout}
-                className="text-[0.8125rem] text-muted hover:text-ink px-4 py-2 transition-colors duration-200 cursor-pointer"
+                className="text-[0.9375rem] text-muted hover:text-ink px-4 py-2 transition-colors duration-200 cursor-pointer"
               >
                 Çıkış
               </button>
@@ -87,13 +87,17 @@ export default function Navbar({ onOpenLogin }) {
               <button
                 type="button"
                 onClick={onOpenLogin}
-                className="text-[0.8125rem] text-muted hover:text-ink px-4 py-2 transition-colors duration-200 cursor-pointer"
+                className="text-[0.9375rem] text-muted hover:text-ink px-4 py-2 transition-colors duration-200 cursor-pointer"
               >
                 Giriş Yap
               </button>
-              <Link to="/#basla" className="btn-primary text-[0.8125rem] !py-2.5 !px-5 cursor-pointer">
+              <button
+                type="button"
+                onClick={() => onOpenLogin?.('register')}
+                className="btn-primary text-[0.9375rem] !py-2.5 !px-5 cursor-pointer"
+              >
                 Başla
-              </Link>
+              </button>
             </>
           )}
         </div>
@@ -117,7 +121,7 @@ export default function Navbar({ onOpenLogin }) {
             <Link
               key={l.to}
               to={l.to}
-              className={`text-sm transition-colors cursor-pointer ${
+              className={`text-base transition-colors cursor-pointer ${
                 location.pathname === l.to ? 'text-champagne' : 'text-muted hover:text-ink'
               }`}
             >
@@ -128,7 +132,7 @@ export default function Navbar({ onOpenLogin }) {
             <>
               <Link
                 to="/fashion"
-                className={`text-sm transition-colors cursor-pointer ${
+                className={`text-base transition-colors cursor-pointer ${
                   location.pathname === '/fashion' ? 'text-champagne' : 'text-muted hover:text-ink'
                 }`}
               >
@@ -140,7 +144,7 @@ export default function Navbar({ onOpenLogin }) {
                   logout()
                   setOpen(false)
                 }}
-                className="text-sm text-left text-muted hover:text-ink transition-colors cursor-pointer"
+                className="text-base text-left text-muted hover:text-ink transition-colors cursor-pointer"
               >
                 Çıkış
               </button>
@@ -150,13 +154,20 @@ export default function Navbar({ onOpenLogin }) {
               <button
                 type="button"
                 onClick={handleLogin}
-                className="text-sm text-left text-muted hover:text-ink transition-colors cursor-pointer"
+                className="text-base text-left text-muted hover:text-ink transition-colors cursor-pointer"
               >
                 Giriş Yap
               </button>
-              <Link to="/#basla" onClick={() => setOpen(false)} className="btn-primary w-full mt-2 cursor-pointer">
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenLogin?.('register')
+                  setOpen(false)
+                }}
+                className="btn-primary w-full mt-2 cursor-pointer text-base"
+              >
                 Başla
-              </Link>
+              </button>
             </>
           )}
         </div>

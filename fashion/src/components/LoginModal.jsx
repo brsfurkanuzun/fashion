@@ -47,7 +47,7 @@ function AppleIcon() {
   )
 }
 
-export default function LoginModal({ open, onClose }) {
+export default function LoginModal({ open, onClose, initialMode = 'login' }) {
   const navigate = useNavigate()
   const { login } = useAuth()
   const [mode, setMode] = useState('login')
@@ -86,8 +86,10 @@ export default function LoginModal({ open, onClose }) {
       setSuccess(false)
       setErrors({})
       setForm({ email: '', password: '', name: '' })
+      return
     }
-  }, [open])
+    setMode(initialMode === 'register' ? 'register' : 'login')
+  }, [open, initialMode])
 
   const switchMode = (next) => {
     setMode(next)

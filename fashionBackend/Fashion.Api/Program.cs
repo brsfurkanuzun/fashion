@@ -9,7 +9,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 var useInMemoryDb = builder.Configuration.GetValue("Database:UseInMemory", false);
 
-builder.Services.AddOpenApi();
 builder.Services.AddHttpClient<FashnService>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["Fashn:BaseUrl"] ?? "https://api.fashn.ai");
@@ -22,36 +21,34 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     }
     else
     {
-        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required.");
+        var serverVersion = ServerVersion.AutoDetect(connectionString);
+        options.UseMySql(connectionString, serverVersion);
     }
 });
+
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()?.ToList() ?? [];
+if (builder.Environment.IsDevelopment())
+{
+    corsOrigins.AddRange(["http://localhost:5173", "http://127.0.0.1:5173"]);
+}
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("FrontendDev", policy =>
-        policy.SetIsOriginAllowed(origin =>
-        {
-            if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
-            {
-                return false;
-            }
-
-            return uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
-                || uri.Host.Equals("127.0.0.1");
-        })
+    options.AddPolicy("Frontend", policy =>
+        policy.WithOrigins(corsOrigins.Distinct(StringComparer.OrdinalIgnoreCase).ToArray())
             .AllowAnyHeader()
             .AllowAnyMethod());
 });
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+app.UseCors("Frontend");
 
-app.UseCors("FrontendDev");
+var skipMigrations = builder.Configuration.GetValue("Database:SkipMigrations", false);
 
-// DB init: migrations (PostgreSQL) or EnsureCreated (in-memory dev).
+// DB init: migrations (MySQL) or EnsureCreated (in-memory dev).
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -59,7 +56,7 @@ using (var scope = app.Services.CreateScope())
     {
         await db.Database.EnsureCreatedAsync();
     }
-    else
+    else if (!skipMigrations)
     {
         await db.Database.MigrateAsync();
     }
