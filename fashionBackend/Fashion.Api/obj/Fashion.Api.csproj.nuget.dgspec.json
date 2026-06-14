@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\baris\\OneDrive\\Belgeler\\GitHub\\fashion\\fashionBackend\\Fashion.Api\\Fashion.Api.csproj": {}
+    "c:\\Users\\baris\\OneDrive\\Belgeler\\GitHub\\fashion\\fashionBackend\\Fashion.Api\\Fashion.Api.csproj": {}
   },
   "projects": {
-    "C:\\Users\\baris\\OneDrive\\Belgeler\\GitHub\\fashion\\fashionBackend\\Fashion.Api\\Fashion.Api.csproj": {
+    "c:\\Users\\baris\\OneDrive\\Belgeler\\GitHub\\fashion\\fashionBackend\\Fashion.Api\\Fashion.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\baris\\OneDrive\\Belgeler\\GitHub\\fashion\\fashionBackend\\Fashion.Api\\Fashion.Api.csproj",
+        "projectUniqueName": "c:\\Users\\baris\\OneDrive\\Belgeler\\GitHub\\fashion\\fashionBackend\\Fashion.Api\\Fashion.Api.csproj",
         "projectName": "Fashion.Api",
-        "projectPath": "C:\\Users\\baris\\OneDrive\\Belgeler\\GitHub\\fashion\\fashionBackend\\Fashion.Api\\Fashion.Api.csproj",
+        "projectPath": "c:\\Users\\baris\\OneDrive\\Belgeler\\GitHub\\fashion\\fashionBackend\\Fashion.Api\\Fashion.Api.csproj",
         "packagesPath": "C:\\Users\\baris\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\baris\\OneDrive\\Belgeler\\GitHub\\fashion\\fashionBackend\\Fashion.Api\\obj\\",
+        "outputPath": "c:\\Users\\baris\\OneDrive\\Belgeler\\GitHub\\fashion\\fashionBackend\\Fashion.Api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

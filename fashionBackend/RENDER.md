@@ -10,13 +10,18 @@ Repoyu GitHub’a it; `fashionBackend/Fashion.Api` klasöründe `Dockerfile` var
 
 ## 3) Ayarlar
 
+Repoda **kökte `Dockerfile`** var (`fashion/Dockerfile`). Render’da şöyle kullan:
+
 | Alan | Değer |
 |------|--------|
-| **Root Directory** | `fashionBackend/Fashion.Api` |
-| **Runtime** | **Docker** |
+| **Language** | **Docker** |
+| **Root Directory** | *(boş bırak — repo kökü)* |
+| **Dockerfile Path** | *(boş)* veya `Dockerfile` |
 | **Instance type** | Free veya ücretli |
 
-Dockerfile kökte otomatik bulunur.
+Alternatif: Root Directory = `fashionBackend/Fashion.Api` + Dockerfile Path boş → o zaman sadece alt klasördeki `Fashion.Api/Dockerfile` kullanılır (ikinci Dockerfile).
+
+Kök `Dockerfile` yoksa clone’da “open Dockerfile: no such file” hatası alırsın; **git push** ile kökteki dosyayı GitHub’a gönder.
 
 **Start Command** alanı çıkıyorsa (zorunluysa) şunu yaz:
 
@@ -53,9 +58,25 @@ dotnet ./publish/Fashion.Api.dll --urls http://0.0.0.0:$PORT
 **Zorunlu örnekler** (MySQL cPanel’de, şema SQL ile):
 
 ```text
-ConnectionStrings__DefaultConnection=Server=HOST;Port=3306;Database=DB;User=USER;Password=PAROLA;
+ConnectionStrings__DefaultConnection=Server=CPANEL_MYSQL_HOSTNAME;Port=3306;Database=DB;User=USER;Password=PAROLA;
 Database__SkipMigrations=true
 ```
+
+`Server=` **asla** `localhost` olmamalı (Render konteyneri cPanel’e gidemez). cPanel’deki **uzak MySQL sunucu adı** (ör. `mysql123.hosting.com`).
+
+İsteğe bağlı (cPanel MariaDB sürümün farklıysa):
+
+```text
+Database__ServerVersion=10.11.6-mariadb
+```
+
+Geçici olarak DB yokken servisin ayağa kalkması (sadece `/api/health`; API verisi yok):
+
+```text
+Database__ContinueOnInitFailure=true
+```
+
+Kalıcı çözüm: **Remote MySQL** + doğru `ConnectionStrings__DefaultConnection`.
 
 **CORS** (frontend adresin):
 

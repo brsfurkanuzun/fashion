@@ -30,7 +30,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     {
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required.");
-        var serverVersion = ServerVersion.AutoDetect(connectionString);
+        var serverVersionString = builder.Configuration["Database:ServerVersion"];
+        var serverVersion = !string.IsNullOrWhiteSpace(serverVersionString)
+            ? ServerVersion.Parse(serverVersionString)
+            : builder.Environment.IsDevelopment()
+                ? ServerVersion.AutoDetect(connectionString)
+                : ServerVersion.Parse("10.6.16-mariadb");
         options.UseMySql(connectionString, serverVersion);
     }
 });
@@ -54,21 +59,29 @@ var app = builder.Build();
 app.UseCors("Frontend");
 
 var skipMigrations = builder.Configuration.GetValue("Database:SkipMigrations", false);
+var continueOnInitFailure = builder.Configuration.GetValue("Database:ContinueOnInitFailure", false);
+var initLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("DatabaseInit");
 
-// DB init: migrations (MySQL) or EnsureCreated (in-memory dev).
-using (var scope = app.Services.CreateScope())
+try
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    if (useInMemoryDb)
+    using (var scope = app.Services.CreateScope())
     {
-        await db.Database.EnsureCreatedAsync();
-    }
-    else if (!skipMigrations)
-    {
-        await db.Database.MigrateAsync();
-    }
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        if (useInMemoryDb)
+        {
+            await db.Database.EnsureCreatedAsync();
+        }
+        else if (!skipMigrations)
+        {
+            await db.Database.MigrateAsync();
+        }
 
-    await SeedData.InitializeAsync(db);
+        await SeedData.InitializeAsync(db);
+    }
+}
+catch (Exception ex) when (continueOnInitFailure)
+{
+    initLogger.LogError(ex, "Database init failed; continuing (Database:ContinueOnInitFailure=true). Fix Remote MySQL / ConnectionStrings.");
 }
 
 app.MapGet("/api/health", () => Results.Ok(new { status = "ok", service = "fashion-backend" }));
