@@ -7,6 +7,13 @@ using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Render ve benzeri ortamlar: PORT ortam değişkeni
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrWhiteSpace(port))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
+
 var useInMemoryDb = builder.Configuration.GetValue("Database:UseInMemory", false);
 
 builder.Services.AddHttpClient<FashnService>(client =>
