@@ -4,6 +4,7 @@ import { Check, Minus, ChevronDown } from 'lucide-react'
 import { ModernPricingPage } from '@/components/ui/animated-glassy-pricing'
 import Reveal from '../components/Reveal'
 import SectionLabel from '../components/SectionLabel'
+import { useAuth } from '../context/AuthContext'
 
 const nfTry = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 })
 const nfInt = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 })
@@ -84,7 +85,22 @@ function FaqItem({ q, a }) {
 export default function PricingPage() {
   const [proTierIndex, setProTierIndex] = useState(0)
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
   const goStart = useCallback(() => navigate('/#basla'), [navigate])
+  const goCheckoutStarter = useCallback(() => {
+    if (!isAuthenticated) {
+      navigate('/kayit?paket=starter')
+      return
+    }
+    navigate('/odeme?paket=starter')
+  }, [navigate, isAuthenticated])
+  const goCheckoutPro = useCallback(() => {
+    if (!isAuthenticated) {
+      navigate(`/kayit?paket=pro-${proTierIndex}`)
+      return
+    }
+    navigate(`/odeme?paket=pro-${proTierIndex}`)
+  }, [navigate, isAuthenticated, proTierIndex])
 
   const proTier = PRO_TIERS[proTierIndex]
   const proTl = proTier.tl
@@ -105,7 +121,7 @@ export default function PricingPage() {
         ],
         buttonText: 'Satın Al',
         buttonVariant: 'secondary',
-        onButtonClick: goStart,
+        onButtonClick: goCheckoutStarter,
       },
       {
         planName: 'Profesyonel',
@@ -158,7 +174,7 @@ export default function PricingPage() {
         buttonText: "Paketi Seç",
         isPopular: true,
         buttonVariant: 'primary',
-        onButtonClick: goStart,
+        onButtonClick: goCheckoutPro,
       },
       {
         planName: 'Kurumsal',
@@ -171,7 +187,7 @@ export default function PricingPage() {
         onButtonClick: goStart,
       },
     ],
-    [goStart, proTierIndex, proTl, proCredits]
+    [goStart, goCheckoutStarter, goCheckoutPro, proTierIndex, proTl, proCredits]
   )
 
   return (

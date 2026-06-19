@@ -12,6 +12,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     public DbSet<GalleryItem> GalleryItems => Set<GalleryItem>();
     public DbSet<ToolDefinition> ToolDefinitions => Set<ToolDefinition>();
     public DbSet<ChangelogEntry> ChangelogEntries => Set<ChangelogEntry>();
+    public DbSet<PaymentOrder> PaymentOrders => Set<PaymentOrder>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -23,6 +24,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(x => x.PasswordHash).HasMaxLength(500);
             entity.Property(x => x.DisplayName).HasMaxLength(120);
             entity.Property(x => x.Role).HasMaxLength(40);
+            entity.Property(x => x.GoogleSub).HasMaxLength(128);
+            entity.Property(x => x.AppleSub).HasMaxLength(128);
+            entity.HasIndex(x => x.GoogleSub).IsUnique();
+            entity.HasIndex(x => x.AppleSub).IsUnique();
         });
 
         modelBuilder.Entity<CreditWallet>(entity =>
@@ -79,6 +84,16 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             entity.Property(x => x.Workspace).HasMaxLength(40);
             entity.Property(x => x.Label).HasMaxLength(120);
             entity.Property(x => x.Quality).HasMaxLength(4);
+        });
+
+        modelBuilder.Entity<PaymentOrder>(entity =>
+        {
+            entity.HasKey(x => x.MerchantOid);
+            entity.Property(x => x.MerchantOid).HasMaxLength(64);
+            entity.Property(x => x.PackageKey).HasMaxLength(40);
+            entity.Property(x => x.Status).HasMaxLength(20);
+            entity.HasIndex(x => x.UserId);
+            entity.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<ChangelogEntry>(entity =>

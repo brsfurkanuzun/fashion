@@ -1,5 +1,7 @@
 using Fashion.Api.Data;
 using Fashion.Api.Models;
+using Fashion.Api.Payments;
+using Fashion.Api.Auth;
 using Fashion.Api.Security;
 using Fashion.Api.Services;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +18,9 @@ if (!string.IsNullOrWhiteSpace(port))
 
 var useInMemoryDb = builder.Configuration.GetValue("Database:UseInMemory", false);
 
+builder.Services.Configure<PayTrOptions>(builder.Configuration.GetSection("PayTr"));
+builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection("Auth"));
+builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<FashnService>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["Fashn:BaseUrl"] ?? "https://api.fashn.ai");
@@ -36,7 +41,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
             : builder.Environment.IsDevelopment()
                 ? ServerVersion.AutoDetect(connectionString)
                 : ServerVersion.Parse("10.6.16-mariadb");
-        options.UseMySql(connectionString, serverVersion);
+        options.UseMySql(connectionString, serverVersion, mysql =>
+            mysql.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(15),
+                errorNumbersToAdd: null));
     }
 });
 
@@ -77,6 +86,8 @@ try
         }
 
         await SeedData.InitializeAsync(db);
+        await PayTrPaymentEndpoints.EnsurePaymentOrdersTableAsync(db);
+        await ExternalAuthSchema.EnsureExternalAuthColumnsAsync(db);
     }
 }
 catch (Exception ex) when (continueOnInitFailure)
@@ -560,6 +571,9 @@ app.MapGet("/api/docs/support", () => Results.Ok(new[]
     new { title = "Kredi sistemi", body = "Her üretimde tool kredi maliyeti kadar bakiye düşer." },
     new { title = "Galeri", body = "Tamamlanan görseller galeriye kayıt edilir." }
 }));
+
+app.MapPayTrPayments();
+app.MapExternalAuth();
 
 app.Run();
 

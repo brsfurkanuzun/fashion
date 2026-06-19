@@ -10,6 +10,10 @@ import SupportPage from './pages/SupportPage'
 import AccountPage from './pages/AccountPage'
 import BillingPage from './pages/BillingPage'
 import ChangelogPage from './pages/ChangelogPage'
+import CheckoutPage from './pages/CheckoutPage'
+import PaymentResultPage from './pages/PaymentResultPage'
+import RegisterForPurchasePage from './pages/RegisterForPurchasePage'
+
 export default function App() {
   const [loginModal, setLoginModal] = useState({ open: false, mode: 'login' })
   const openLogin = (mode = 'login') => {
@@ -31,6 +35,17 @@ export default function App() {
       >
         <Route index element={<HomePage />} />
         <Route path="fiyatlandirma" element={<PricingPage />} />
+        <Route path="kayit" element={<RegisterForPurchasePage />} />
+        <Route path="odeme/basarili" element={<PaymentResultPage ok />} />
+        <Route path="odeme/hata" element={<PaymentResultPage ok={false} />} />
+        <Route
+          path="odeme"
+          element={
+            <ProtectedRoute>
+              <CheckoutPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="fashion"
           element={

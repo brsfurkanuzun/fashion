@@ -109,3 +109,16 @@ C:\Users\baris\OneDrive\Belgeler\GitHub\fashion\fashionBackend\Fashion.Api\obj\R
 C:\Users\baris\OneDrive\Belgeler\GitHub\fashion\fashionBackend\Fashion.Api\obj\Release\net8.0\Fashion.Api.pdb
 C:\Users\baris\OneDrive\Belgeler\GitHub\fashion\fashionBackend\Fashion.Api\obj\Release\net8.0\Fashion.Api.genruntimeconfig.cache
 C:\Users\baris\OneDrive\Belgeler\GitHub\fashion\fashionBackend\Fashion.Api\obj\Release\net8.0\ref\Fashion.Api.dll
+c:\Users\baris\OneDrive\Belgeler\GitHub\fashion\fashionBackend\Fashion.Api\bin\Release\net8.0\Google.Apis.dll
+c:\Users\baris\OneDrive\Belgeler\GitHub\fashion\fashionBackend\Fashion.Api\bin\Release\net8.0\Google.Apis.Auth.dll
+c:\Users\baris\OneDrive\Belgeler\GitHub\fashion\fashionBackend\Fashion.Api\bin\Release\net8.0\Google.Apis.Core.dll
+c:\Users\baris\OneDrive\Belgeler\GitHub\fashion\fashionBackend\Fashion.Api\bin\Release\net8.0\Microsoft.IdentityModel.Abstractions.dll
+c:\Users\baris\OneDrive\Belgeler\GitHub\fashion\fashionBackend\Fashion.Api\bin\Release\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+c:\Users\baris\OneDrive\Belgeler\GitHub\fashion\fashionBackend\Fashion.Api\bin\Release\net8.0\Microsoft.IdentityModel.Logging.dll
+c:\Users\baris\OneDrive\Belgeler\GitHub\fashion\fashionBackend\Fashion.Api\bin\Release\net8.0\Microsoft.IdentityModel.Protocols.dll
+c:\Users\baris\OneDrive\Belgeler\GitHub\fashion\fashionBackend\Fashion.Api\bin\Release\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+c:\Users\baris\OneDrive\Belgeler\GitHub\fashion\fashionBackend\Fashion.Api\bin\Release\net8.0\Microsoft.IdentityModel.Tokens.dll
+c:\Users\baris\OneDrive\Belgeler\GitHub\fashion\fashionBackend\Fashion.Api\bin\Release\net8.0\Newtonsoft.Json.dll
+c:\Users\baris\OneDrive\Belgeler\GitHub\fashion\fashionBackend\Fashion.Api\bin\Release\net8.0\System.IdentityModel.Tokens.Jwt.dll
+c:\Users\baris\OneDrive\Belgeler\GitHub\fashion\fashionBackend\Fashion.Api\bin\Release\net8.0\System.Management.dll
+c:\Users\baris\OneDrive\Belgeler\GitHub\fashion\fashionBackend\Fashion.Api\bin\Release\net8.0\runtimes\win\lib\net7.0\System.Management.dll

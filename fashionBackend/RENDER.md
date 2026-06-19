@@ -98,7 +98,52 @@ Fashn__ApiKey=...
 
 ## 5) cPanel MySQL
 
-**Remote MySQL**’e Render çıkış IP’si ekle. Free tier’da IP sabit olmayabilir; bağlantı koparsa ücretli plan veya **Outbound IP** dokümantasyonuna bak.
+**Remote MySQL**’e `%` veya Render IP’si ekle. Free tier’da IP sabit olmayabilir; bağlantı koparsa ücretli plan veya **Outbound IP** dokümantasyonuna bak.
+
+### Log’da `nulatechnology_nuladesign` + doğru IP/domain ama `Unable to connect to any of the specified MySQL hosts`
+
+Bu genelde **MySQL’in dışarıdan dinlenmemesi** veya **firewall’da 3306’nın kapalı** olmasıdır. cPanel’deki **Shared IP**, web için olur; **Render → bu IP:3306** çoğu paylaşımlı pakette **erişilemez**.
+
+**Kontrol:** Kendi bilgisayarından (Uzak MySQL’de `%` varken) `mysql` veya `Test-NetConnection HEDEF -Port 3306` ile dene. Bağlanmıyorsa hosting **3306’yı dışarı açmıyor** demektir — **destek**e sor: *“Harici sunucudan MySQL’e 3306 ile bağlanabilir miyim?”*
+
+**Seçenekler:** (1) Hosting açsın / gerçek dış MySQL hostname versin, (2) **PlanetScale / Railway / Aiven** vb. bulut MySQL + connection string’i Render’a yaz, (3) API’yi **aynı hostingde** çalıştırıp DB’ye `localhost` ile git.
+
+Geçici: `Database__ContinueOnInitFailure=true` → process düşmez, `/api/health` çalışır; veri endpoint’leri DB olmadan hata verir.
+
+## PayTR (iFrame)
+
+1. [PayTR Mağaza Paneli](https://www.paytr.com/) → **Bildirim URL**: tam adres  
+   `https://SENIN-API-DOMAININ/api/payments/paytr/notify`  
+   (Bu endpoint **form POST** kabul eder; yanıt gövdesi yalnızca `OK` olmalı — kodda öyle.)
+
+2. Render / ortam değişkenleri (örnek):
+
+```text
+PayTr__MerchantId=...
+PayTr__MerchantKey=...
+PayTr__MerchantSalt=...
+PayTr__FrontendBaseUrl=https://design.nulatechnology.com
+PayTr__TestMode=0
+PayTr__DebugOn=0
+```
+
+Canlı test öncesi: `MerchantId` boşsa API `503` döner (bilerek).
+
+3. MySQL ilk açılışta `PaymentOrders` tablosu yoksa uygulama **CREATE TABLE IF NOT EXISTS** ile oluşturur (yalnızca MySQL sağlayıcısı).
+
+## Google / Apple (OAuth)
+
+Frontend `GET /api/auth/client-config` ile public client id’leri alır. Render’da:
+
+```text
+Auth__Google__ClientId=....apps.googleusercontent.com
+Auth__Apple__ServicesId=com.example.web   # Services ID (bundle değil)
+```
+
+- **Google Cloud Console**: OAuth 2.0 Client (Web) → **Authorized JavaScript origins** = Vite dev (`http://localhost:5173`) + prod SPA origin.
+- **Apple Developer**: Sign in with Apple → Services ID → **Return URLs** ve **Domains** = SPA’nın `window.location.origin` (örn. `https://design.nulatechnology.com`).
+
+Boş bırakılırsa ilgili buton gösterilmez.
 
 ## 6) Deploy sonrası
 

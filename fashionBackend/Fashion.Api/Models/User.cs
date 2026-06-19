@@ -9,6 +9,12 @@ public sealed class User
     public string Role { get; set; } = "user";
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
+    /// <summary>Google hesap <c>sub</c> (openid). Şifreli hesapla eşleştirme için.</summary>
+    public string? GoogleSub { get; set; }
+
+    /// <summary>Apple Sign In <c>sub</c>.</summary>
+    public string? AppleSub { get; set; }
+
     public CreditWallet? CreditWallet { get; set; }
     public List<CreditTransaction> CreditTransactions { get; set; } = [];
     public List<GenerationJob> GenerationJobs { get; set; } = [];

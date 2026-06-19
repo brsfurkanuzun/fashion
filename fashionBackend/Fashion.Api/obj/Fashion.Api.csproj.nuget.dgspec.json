@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\baris\\OneDrive\\Belgeler\\GitHub\\fashion\\fashionBackend\\Fashion.Api\\Fashion.Api.csproj": {}
+    "C:\\Users\\baris\\OneDrive\\Belgeler\\GitHub\\fashion\\fashionBackend\\Fashion.Api\\Fashion.Api.csproj": {}
   },
   "projects": {
-    "c:\\Users\\baris\\OneDrive\\Belgeler\\GitHub\\fashion\\fashionBackend\\Fashion.Api\\Fashion.Api.csproj": {
+    "C:\\Users\\baris\\OneDrive\\Belgeler\\GitHub\\fashion\\fashionBackend\\Fashion.Api\\Fashion.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\baris\\OneDrive\\Belgeler\\GitHub\\fashion\\fashionBackend\\Fashion.Api\\Fashion.Api.csproj",
+        "projectUniqueName": "C:\\Users\\baris\\OneDrive\\Belgeler\\GitHub\\fashion\\fashionBackend\\Fashion.Api\\Fashion.Api.csproj",
         "projectName": "Fashion.Api",
-        "projectPath": "c:\\Users\\baris\\OneDrive\\Belgeler\\GitHub\\fashion\\fashionBackend\\Fashion.Api\\Fashion.Api.csproj",
+        "projectPath": "C:\\Users\\baris\\OneDrive\\Belgeler\\GitHub\\fashion\\fashionBackend\\Fashion.Api\\Fashion.Api.csproj",
         "packagesPath": "C:\\Users\\baris\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\baris\\OneDrive\\Belgeler\\GitHub\\fashion\\fashionBackend\\Fashion.Api\\obj\\",
+        "outputPath": "C:\\Users\\baris\\OneDrive\\Belgeler\\GitHub\\fashion\\fashionBackend\\Fashion.Api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -52,6 +52,10 @@
           "framework": "net8.0",
           "targetAlias": "net8.0",
           "dependencies": {
+            "Google.Apis.Auth": {
+              "target": "Package",
+              "version": "[1.68.0, )"
+            },
             "Microsoft.EntityFrameworkCore.Design": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "suppressParent": "All",
@@ -61,6 +65,10 @@
             "Microsoft.EntityFrameworkCore.InMemory": {
               "target": "Package",
               "version": "[8.0.11, )"
+            },
+            "Microsoft.IdentityModel.Protocols.OpenIdConnect": {
+              "target": "Package",
+              "version": "[8.2.1, )"
             },
             "Pomelo.EntityFrameworkCore.MySql": {
               "target": "Package",
