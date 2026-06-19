@@ -5,6 +5,7 @@ using Fashion.Api.Auth;
 using Fashion.Api.Security;
 using Fashion.Api.Services;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,19 +34,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     }
     else
     {
-        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-            ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required.");
-        var serverVersionString = builder.Configuration["Database:ServerVersion"];
-        var serverVersion = !string.IsNullOrWhiteSpace(serverVersionString)
-            ? ServerVersion.Parse(serverVersionString)
-            : builder.Environment.IsDevelopment()
-                ? ServerVersion.AutoDetect(connectionString)
-                : ServerVersion.Parse("10.6.16-mariadb");
-        options.UseMySql(connectionString, serverVersion, mysql =>
-            mysql.EnableRetryOnFailure(
+        var connectionString = ResolvePostgresConnectionString(builder.Configuration);
+        options.UseNpgsql(connectionString, npgsql =>
+            npgsql.EnableRetryOnFailure(
                 maxRetryCount: 5,
                 maxRetryDelay: TimeSpan.FromSeconds(15),
-                errorNumbersToAdd: null));
+                errorCodesToAdd: null));
     }
 });
 
@@ -92,7 +86,36 @@ try
 }
 catch (Exception ex) when (continueOnInitFailure)
 {
-    initLogger.LogError(ex, "Database init failed; continuing (Database:ContinueOnInitFailure=true). Fix Remote MySQL / ConnectionStrings.");
+    initLogger.LogError(ex, "Database init failed; continuing (Database:ContinueOnInitFailure=true). Fix PostgreSQL / ConnectionStrings.");
+}
+
+static string ResolvePostgresConnectionString(IConfiguration configuration)
+{
+    var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+    if (!string.IsNullOrWhiteSpace(databaseUrl))
+    {
+        return ParseDatabaseUrl(databaseUrl);
+    }
+
+    return configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection or DATABASE_URL is required.");
+}
+
+static string ParseDatabaseUrl(string databaseUrl)
+{
+    var uri = new Uri(databaseUrl);
+    var userInfo = uri.UserInfo.Split(':', 2);
+    var builder = new NpgsqlConnectionStringBuilder
+    {
+        Host = uri.Host,
+        Port = uri.Port > 0 ? uri.Port : 5432,
+        Database = uri.AbsolutePath.TrimStart('/'),
+        Username = Uri.UnescapeDataString(userInfo[0]),
+        Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty,
+        SslMode = SslMode.Require,
+        TrustServerCertificate = true,
+    };
+    return builder.ConnectionString;
 }
 
 app.MapGet("/api/health", () => Results.Ok(new { status = "ok", service = "fashion-backend" }));
