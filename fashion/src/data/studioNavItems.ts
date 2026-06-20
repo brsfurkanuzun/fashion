@@ -15,12 +15,12 @@ import {
   Image01,
 } from '@untitledui/icons'
 import type { NavItemType } from '@/components/application/app-navigation/config'
-import { FASHION_TOOLS } from './fashionTools'
+import { STUDIO_TOOLS } from './studioTools'
 
 export type NavItemWithIcon = NavItemType & { icon: FC<{ className?: string }> }
 
-const cekimTools = FASHION_TOOLS.filter((t) => t.workspace === 'cekim')
-const proTools = FASHION_TOOLS.filter((t) => t.workspace === 'produksiyon')
+const cekimTools = STUDIO_TOOLS.filter((t) => t.workspace === 'cekim')
+const proTools = STUDIO_TOOLS.filter((t) => t.workspace === 'produksiyon')
 
 const toolIconMap: Record<string, FC<{ className?: string }>> = {
   'cekim-model': User01,
@@ -48,13 +48,13 @@ export function buildStudioNavItems(_credits: number): NavItemWithIcon[] {
     },
     {
       label: 'Stüdyo',
-      href: '/fashion',
+      href: '/studio',
       icon: Grid03,
       items: [
-        { label: 'Genel bakış', href: '/fashion', icon: Grid03 },
+        { label: 'Genel bakış', href: '/studio', icon: Grid03 },
         ...cekimTools.map((t) => ({
           label: t.label,
-          href: `/fashion?tool=${t.id}`,
+          href: `/studio?tool=${t.id}`,
           icon: toolIconMap[t.id] ?? User01,
           badge: t.isNew ? 'Yeni' : undefined,
         })),

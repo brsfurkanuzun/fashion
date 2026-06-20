@@ -67,9 +67,9 @@ export default function Navbar({ onOpenLogin }) {
           {isAuthenticated ? (
             <>
               <Link
-                to="/fashion"
+                to="/studio"
                 className={`text-[0.9375rem] px-4 py-2 transition-colors duration-200 cursor-pointer ${
-                  location.pathname === '/fashion' ? 'text-champagne' : 'text-muted hover:text-ink'
+                  location.pathname === '/studio' ? 'text-champagne' : 'text-muted hover:text-ink'
                 }`}
               >
                 Stüdyo
@@ -131,9 +131,9 @@ export default function Navbar({ onOpenLogin }) {
           {isAuthenticated ? (
             <>
               <Link
-                to="/fashion"
+                to="/studio"
                 className={`text-base transition-colors cursor-pointer ${
-                  location.pathname === '/fashion' ? 'text-champagne' : 'text-muted hover:text-ink'
+                  location.pathname === '/studio' ? 'text-champagne' : 'text-muted hover:text-ink'
                 }`}
               >
                 Stüdyo

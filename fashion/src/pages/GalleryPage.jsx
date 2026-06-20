@@ -194,12 +194,12 @@ export default function GalleryPage() {
   }
 
   const toolActions = (item) => [
-    { label: 'Edit', icon: WandSparkles, to: '/fashion?tool=pro-edit&ws=produksiyon' },
-    { label: 'Model Swap', icon: ArrowLeftRight, to: '/fashion?tool=pro-swap&ws=produksiyon' },
-    { label: 'Product to Model', icon: Shirt, to: '/fashion?tool=pro-model&ws=produksiyon' },
-    { label: 'Try-On', icon: User, to: '/fashion?tool=pro-tryon&ws=produksiyon' },
-    { label: 'Packshot', icon: Ghost, to: '/fashion?tool=pro-decoupe&ws=produksiyon' },
-    { label: 'Video', icon: Video, to: '/fashion?tool=pro-video&ws=produksiyon' },
+    { label: 'Edit', icon: WandSparkles, to: '/studio?tool=pro-edit&ws=produksiyon' },
+    { label: 'Model Swap', icon: ArrowLeftRight, to: '/studio?tool=pro-swap&ws=produksiyon' },
+    { label: 'Product to Model', icon: Shirt, to: '/studio?tool=pro-model&ws=produksiyon' },
+    { label: 'Try-On', icon: User, to: '/studio?tool=pro-tryon&ws=produksiyon' },
+    { label: 'Packshot', icon: Ghost, to: '/studio?tool=pro-decoupe&ws=produksiyon' },
+    { label: 'Video', icon: Video, to: '/studio?tool=pro-video&ws=produksiyon' },
     { label: 'Assistant', icon: MessageCircle, to: '/support' },
   ]
 
@@ -390,7 +390,7 @@ export default function GalleryPage() {
                               <p className="text-sm font-medium">Henüz üretim yok</p>
                               <p className="mt-1 text-xs text-muted-foreground">Studio'da ilk görselini oluştur.</p>
                               <Link
-                                to="/fashion"
+                                to="/studio"
                                 className="mt-4 rounded-xl border border-border/60 px-4 py-2 text-xs font-medium text-foreground transition-colors hover:bg-foreground/[0.04]"
                               >
                                 Studio'ya git
@@ -612,7 +612,7 @@ export default function GalleryPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => navigate(`/fashion?tool=${selectedItem.toolKey}`)}
+                        onClick={() => navigate(`/studio?tool=${selectedItem.toolKey}`)}
                         className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.06] px-3 text-xs font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white"
                       >
                         <Repeat className="h-3 w-3" />

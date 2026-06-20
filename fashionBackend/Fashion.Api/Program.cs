@@ -33,19 +33,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     }
     else
     {
-        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-            ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required.");
-        var serverVersionString = builder.Configuration["Database:ServerVersion"];
-        var serverVersion = !string.IsNullOrWhiteSpace(serverVersionString)
-            ? ServerVersion.Parse(serverVersionString)
-            : builder.Environment.IsDevelopment()
-                ? ServerVersion.AutoDetect(connectionString)
-                : ServerVersion.Parse("10.6.16-mariadb");
-        options.UseMySql(connectionString, serverVersion, mysql =>
-            mysql.EnableRetryOnFailure(
+        var connectionString = DatabaseConnection.Resolve(builder.Configuration);
+        options.UseNpgsql(connectionString, npgsql =>
+            npgsql.EnableRetryOnFailure(
                 maxRetryCount: 5,
                 maxRetryDelay: TimeSpan.FromSeconds(15),
-                errorNumbersToAdd: null));
+                errorCodesToAdd: null));
     }
 });
 
@@ -86,13 +79,11 @@ try
         }
 
         await SeedData.InitializeAsync(db);
-        await PayTrPaymentEndpoints.EnsurePaymentOrdersTableAsync(db);
-        await ExternalAuthSchema.EnsureExternalAuthColumnsAsync(db);
     }
 }
 catch (Exception ex) when (continueOnInitFailure)
 {
-    initLogger.LogError(ex, "Database init failed; continuing (Database:ContinueOnInitFailure=true). Fix Remote MySQL / ConnectionStrings.");
+    initLogger.LogError(ex, "Database init failed; continuing (Database:ContinueOnInitFailure=true). Fix PostgreSQL / ConnectionStrings.");
 }
 
 app.MapGet("/api/health", () => Results.Ok(new { status = "ok", service = "fashion-backend" }));

@@ -387,6 +387,10 @@ const TOOL_CONFIGS = {
     cost: '80 kredi',
     previewTitle: 'Motion storyboard önizlemesi',
     previewNote: 'Kamera hareketi, tempo ve teslim formatını önden simüle eder.',
+    showGuide: false,
+    showCameraFrames: false,
+    showAdditionalSettings: false,
+    showHistory: false,
   },
   'pro-model': {
     title: 'Model Özelleştirme',
@@ -773,60 +777,81 @@ function buildFashnInputs(toolId, uploadedFiles, prompt, tryonParams) {
   }
 }
 
-function ResultImages({ images, isGenerating, tool }) {
-  const ToolIcon = tool.icon
+const STUDIO_RESULTS_PANEL_CLASS = 'glass-card flex min-h-[640px] flex-col rounded-[1.5rem] p-4 sm:p-5'
+const STUDIO_RESULTS_VIEWPORT_CLASS =
+  'relative w-full overflow-hidden rounded-[1.4rem] border border-black/[0.06] aspect-[5/4] dark:border-white/[0.08]'
 
+function StudioResultsPanel({ headerExtra, children, footer, className = '' }) {
+  return (
+    <div className={`${STUDIO_RESULTS_PANEL_CLASS} ${className}`.trim()}>
+      <div className="mb-4 flex shrink-0 items-center justify-between">
+        <h3 className="text-[13px] font-medium tracking-[-0.01em] text-muted">Sonuçlar</h3>
+        {headerExtra}
+      </div>
+      <div className="min-h-0 flex-1">{children}</div>
+      {footer ? <div className="mt-4 shrink-0">{footer}</div> : null}
+    </div>
+  )
+}
+
+function StudioResultsViewport({ children, className = '' }) {
+  return <div className={`${STUDIO_RESULTS_VIEWPORT_CLASS} ${className}`.trim()}>{children}</div>
+}
+
+function ResultImages({ images, isGenerating, tool }) {
   if (isGenerating) {
     return (
-      <div className="flex aspect-[4/5] sm:aspect-[5/4] items-center justify-center rounded-[1.4rem] border border-black/[0.06] dark:border-white/[0.08]">
+      <StudioResultsViewport className="flex items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-muted">
           <Loader size={28} className="animate-spin text-champagne" />
           <p className="text-[12px] tracking-tight">Üretiliyor...</p>
         </div>
-      </div>
+      </StudioResultsViewport>
     )
   }
 
   if (images && images.length > 0) {
     return (
-      <div className={`grid gap-3 ${images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-        {images.map((url, i) => (
-          <div key={url} className="group relative overflow-hidden rounded-[1.4rem] border border-black/[0.06] dark:border-white/[0.08]">
-            <img src={url} alt={`Sonuç ${i + 1}`} className="w-full object-cover" />
-            <div className="absolute inset-0 flex items-end justify-end p-3 opacity-0 transition-opacity group-hover:opacity-100">
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    const res = await fetch(url)
-                    const blob = await res.blob()
-                    const blobUrl = URL.createObjectURL(blob)
-                    const a = document.createElement('a')
-                    a.href = blobUrl
-                    a.download = `nuladesign-${tool.id}-${i + 1}.jpg`
-                    document.body.appendChild(a)
-                    a.click()
-                    document.body.removeChild(a)
-                    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
-                  } catch {
-                    window.open(url, '_blank')
-                  }
-                }}
-                className="inline-flex items-center gap-1.5 rounded-full bg-black/80 px-3 py-1.5 text-[11px] text-white backdrop-blur"
-              >
-                <Download size={12} />
-                İndir
-              </button>
-            </div>
-            {i === 0 && (
-              <div className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-emerald-500/90 px-2 py-0.5 text-[9px] font-medium text-white">
-                <CheckCircle size={10} />
-                Tamamlandı
+      <StudioResultsViewport>
+        <div className={`grid h-full w-full ${images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          {images.map((url, i) => (
+            <div key={url} className="group relative h-full min-h-0 overflow-hidden">
+              <img src={url} alt={`Sonuç ${i + 1}`} className="absolute inset-0 h-full w-full object-cover" />
+              <div className="absolute inset-0 flex items-end justify-end p-3 opacity-0 transition-opacity group-hover:opacity-100">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const res = await fetch(url)
+                      const blob = await res.blob()
+                      const blobUrl = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = blobUrl
+                      a.download = `nuladesign-${tool.id}-${i + 1}.jpg`
+                      document.body.appendChild(a)
+                      a.click()
+                      document.body.removeChild(a)
+                      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
+                    } catch {
+                      window.open(url, '_blank')
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-black/80 px-3 py-1.5 text-[11px] text-white backdrop-blur"
+                >
+                  <Download size={12} />
+                  İndir
+                </button>
               </div>
-            )}
-          </div>
-        ))}
-      </div>
+              {i === 0 && (
+                <div className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-emerald-500/90 px-2 py-0.5 text-[9px] font-medium text-white">
+                  <CheckCircle size={10} />
+                  Tamamlandı
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </StudioResultsViewport>
     )
   }
 
@@ -841,7 +866,7 @@ function ResultPreview({ tool, config, isGenerating, resultImages }) {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-[1.4rem] border border-black/[0.06] dark:border-white/[0.08]">
+    <StudioResultsViewport>
       <div
         className="absolute inset-0"
         style={{
@@ -849,31 +874,29 @@ function ResultPreview({ tool, config, isGenerating, resultImages }) {
             'radial-gradient(circle at top left, rgba(122,107,88,0.24), transparent 40%), linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.12) 100%)',
         }}
       />
-      <div className="relative aspect-[4/5] sm:aspect-[5/4]">
-        <div className="flex h-full flex-col justify-between p-4 sm:p-5">
-          <div className="flex items-start justify-between gap-3">
-            <span className="inline-flex rounded-full bg-[var(--elevated)] px-2 py-1 text-[10px] font-medium tracking-[0.08em] text-ink shadow-sm dark:bg-white/90 dark:text-black">
-              ÖRNEK
-            </span>
-            <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-black/[0.06] bg-[var(--elevated)] text-champagne shadow-sm dark:border-white/[0.08] dark:bg-[#141414]">
-              <ToolIcon size={18} />
-            </div>
-          </div>
-
-          <div className="flex flex-1 items-center justify-center px-6">
-            <div className="flex h-28 w-28 items-center justify-center rounded-full border border-black/[0.06] bg-[var(--card-bg)] text-champagne shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/[0.08] dark:bg-white/[0.04]">
-              <ToolIcon size={42} strokeWidth={1.4} />
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-black/[0.05] bg-[var(--elevated)]/75 p-3 backdrop-blur dark:border-white/[0.08] dark:bg-black/15">
-            <p className="text-[10px] uppercase tracking-[0.08em] text-champagne-dim">Çıktı</p>
-            <h3 className="mt-1 text-sm font-medium tracking-[-0.02em] text-ink dark:text-white">{config.previewTitle}</h3>
-            <p className="mt-1 text-[11px] leading-5 text-muted">{config.previewNote}</p>
+      <div className="relative flex h-full flex-col justify-between p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <span className="inline-flex rounded-full bg-[var(--elevated)] px-2 py-1 text-[10px] font-medium tracking-[0.08em] text-ink shadow-sm dark:bg-white/90 dark:text-black">
+            ÖRNEK
+          </span>
+          <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-black/[0.06] bg-[var(--elevated)] text-champagne shadow-sm dark:border-white/[0.08] dark:bg-[#141414]">
+            <ToolIcon size={18} />
           </div>
         </div>
+
+        <div className="flex flex-1 items-center justify-center px-6">
+          <div className="flex h-28 w-28 items-center justify-center rounded-full border border-black/[0.06] bg-[var(--card-bg)] text-champagne shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] dark:border-white/[0.08] dark:bg-white/[0.04]">
+            <ToolIcon size={42} strokeWidth={1.4} />
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-black/[0.05] bg-[var(--elevated)]/75 p-3 backdrop-blur dark:border-white/[0.08] dark:bg-black/15">
+          <p className="text-[10px] uppercase tracking-[0.08em] text-champagne-dim">Çıktı</p>
+          <h3 className="mt-1 text-sm font-medium tracking-[-0.02em] text-ink dark:text-white">{config.previewTitle}</h3>
+          <p className="mt-1 text-[11px] leading-5 text-muted">{config.previewNote}</p>
+        </div>
       </div>
-    </div>
+    </StudioResultsViewport>
   )
 }
 
@@ -915,56 +938,73 @@ function FastSectionCard({ section }) {
 }
 
 function FastExpressWorkspace({ tool, config, credits, creditCost, onGenerate, isGenerating, jobMessage, uploadedFiles, onFileChange, resultImages, promptText, onPromptChange }) {
-  const ToolIcon = tool.icon
   const isEditorial = tool.id === 'cekim-editorial'
+  const isVideo = tool.id === 'cekim-video'
+  const flowSteps = isEditorial
+    ? ['Ürünü yükle', 'Sahne ve stil seç', 'Tek kare sonucu al']
+    : isVideo
+      ? ['Kaynak görseli yükle', 'Motion ve tempo seç', 'Kısa video çıktısı al']
+      : ['Referans modeli ekle', 'Poz ve kadraj seç', 'Lookbook karesini üret']
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-[18px] font-medium tracking-[-0.02em] text-ink dark:text-white">{config.title}</h1>
-          <p className="mt-1 text-[12px] tracking-[-0.01em] text-muted">{config.subtitle}</p>
-        </div>
-        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-black/[0.06] bg-[var(--card-bg)] px-3 py-1.5 text-[10px] uppercase tracking-[0.08em] text-champagne dark:border-white/[0.08]">
-          <ToolIcon size={12} />
-          {isEditorial ? 'Fast Editorial Flow' : 'Fast Pose Flow'}
-        </div>
+      <div className="mb-6">
+        <h1 className="text-[18px] font-medium tracking-[-0.02em] text-ink dark:text-white">{config.title}</h1>
+        <p className="mt-1 text-[12px] tracking-[-0.01em] text-muted">{config.subtitle}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.08fr_0.92fr]">
-        <div className="space-y-5">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {config.uploads.map((item) => (
-              <UploadCard key={item.label} item={item} toolLabel={tool.label} preview={uploadedFiles?.[item.label]} onFileChange={onFileChange} />
-            ))}
-          </div>
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[360px_1fr]">
+        <div className="glass-card overflow-hidden rounded-[1.5rem]">
+          <div className="flex h-full flex-col">
+            <div className="space-y-4 p-4">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                {config.uploads.map((item) => (
+                  <UploadCard key={item.label} item={item} toolLabel={tool.label} preview={uploadedFiles?.[item.label]} onFileChange={onFileChange} />
+                ))}
+              </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            {config.sections.map((section) => (
-              <FastSectionCard key={section.id} section={section} />
-            ))}
-          </div>
+              <div className="space-y-3">
+                {config.sections.map((section) => (
+                  <FastSectionCard key={section.id} section={section} />
+                ))}
+              </div>
 
-          <div className="rounded-[1.5rem] border border-black/[0.05] bg-[linear-gradient(180deg,rgba(122,107,88,0.08),rgba(0,0,0,0))] p-4 dark:border-white/[0.06]">
-            <div className="mb-3">
-              <label className="mb-1.5 block text-[10px] uppercase tracking-[0.05em] text-muted">Prompt</label>
-              <textarea
-                value={promptText}
-                onChange={(e) => onPromptChange?.(e.target.value)}
-                placeholder="Stil yönlendirmesi yazın..."
-                rows={2}
-                className="w-full resize-none rounded-xl border border-black/[0.06] bg-[var(--card-bg)] px-3 py-2.5 text-[12px] text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-black/10 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white dark:focus:ring-white/10"
-              />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-center">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-black/[0.05] bg-[var(--elevated)]/70 px-3 py-3 dark:border-white/[0.06] dark:bg-white/[0.02]">
-                  <p className="text-[9px] uppercase tracking-[0.1em] text-muted">Kalite Modu</p>
-                  <p className="mt-1 text-sm font-medium tracking-tight text-ink dark:text-white">{config.quality}</p>
+              <div>
+                <label className="mb-1.5 block text-[10px] uppercase tracking-[0.05em] text-muted">Prompt</label>
+                <textarea
+                  value={promptText}
+                  onChange={(e) => onPromptChange?.(e.target.value)}
+                  placeholder="Stil yönlendirmesi yazın..."
+                  rows={3}
+                  className="w-full resize-none rounded-xl border border-black/[0.06] bg-[var(--card-bg)] px-3 py-2.5 text-[12px] text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-black/10 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white dark:focus:ring-white/10"
+                />
+              </div>
+
+              <div className="rounded-2xl border border-black/[0.05] bg-[var(--card-bg)] p-3 dark:border-white/[0.06]">
+                <p className="text-[10px] uppercase tracking-[0.08em] text-champagne-dim">Hızlı Akış</p>
+                <div className="mt-2 space-y-2">
+                  {flowSteps.map((item) => (
+                    <div
+                      key={item}
+                      className="rounded-xl border border-black/[0.05] bg-[var(--elevated)]/70 px-3 py-2 text-[11px] text-muted dark:border-white/[0.06] dark:bg-white/[0.02]"
+                    >
+                      {item}
+                    </div>
+                  ))}
                 </div>
-                <div className="rounded-2xl border border-black/[0.05] bg-[var(--elevated)]/70 px-3 py-3 dark:border-white/[0.06] dark:bg-white/[0.02]">
-                  <p className="text-[9px] uppercase tracking-[0.1em] text-muted">Kredi Maliyeti</p>
-                  <p className="mt-1 text-sm font-medium tracking-tight text-ink dark:text-white">{creditCost} kredi</p>
+              </div>
+            </div>
+
+            <div className="border-t border-black/[0.06] p-4 dark:border-white/[0.08]">
+              <div className="mb-3 rounded-xl bg-black/[0.03] px-3 py-2.5 dark:bg-white/[0.04]">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-muted">{config.quality}</span>
+                  <span className="font-semibold text-ink dark:text-white">{creditCost} kredi</span>
+                </div>
+                <div className="mt-1.5 h-px bg-black/[0.06] dark:bg-white/[0.08]" />
+                <div className="mt-1.5 flex items-center justify-between text-[10px]">
+                  <span className="text-muted">Mevcut bakiye</span>
+                  <span className="text-muted">{credits} kredi</span>
                 </div>
               </div>
 
@@ -972,44 +1012,26 @@ function FastExpressWorkspace({ tool, config, credits, creditCost, onGenerate, i
                 type="button"
                 onClick={onGenerate}
                 disabled={isGenerating}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-black/[0.08] bg-black/90 px-4 py-3 text-[12px] font-medium uppercase tracking-[0.02em] text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto dark:border-white/[0.08] dark:bg-white dark:text-black"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-black/[0.08] bg-black/90 px-4 py-3 text-[12px] font-medium uppercase tracking-[0.02em] text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[0.08] dark:bg-white dark:text-black"
               >
-                {isGenerating ? <><Loader size={14} className="animate-spin" />Oluşturuluyor...</> : <>Oluştur <ArrowRight size={14} /></>}
+                {isGenerating ? <><Loader size={14} className="animate-spin" />Oluşturuluyor...</> : <>{creditCost} kredi · Oluştur <ArrowRight size={14} /></>}
               </button>
-            </div>
-            {jobMessage ? <p className="mt-2 text-[11px] text-muted">{jobMessage}</p> : null}
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="glass-card rounded-[1.5rem] p-4 sm:p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-[13px] font-medium tracking-[-0.01em] text-muted">Sonuçlar</h3>
-            </div>
-            <ResultPreview tool={tool} config={config} isGenerating={isGenerating} resultImages={resultImages} />
-          </div>
-
-          <div className="rounded-[1.5rem] border border-black/[0.05] bg-[var(--card-bg)] p-4 dark:border-white/[0.06]">
-            <p className="text-[10px] uppercase tracking-[0.08em] text-champagne-dim">Hızlı Akış</p>
-            <p className="mt-1 text-[11px] text-muted">Mevcut kredi: {credits}</p>
-            <h3 className="mt-1 text-sm font-medium tracking-[-0.02em] text-ink dark:text-white">
-              {isEditorial ? 'Tek ürün, tek sahne, hızlı kampanya karesi.' : 'Tek ürün, hızlı duruş yönlendirmesi ve temiz kadraj.'}
-            </h3>
-            <div className="mt-3 space-y-2">
-              {(isEditorial
-                ? ['Ürünü yükle', 'Sahne ve stil seç', 'Tek kare sonucu al']
-                : ['Referans modeli ekle', 'Poz ve kadraj seç', 'Lookbook karesini üret']
-              ).map((item) => (
-                <div
-                  key={item}
-                  className="rounded-xl border border-black/[0.05] bg-[var(--elevated)]/70 px-3 py-2 text-[11px] text-muted dark:border-white/[0.06] dark:bg-white/[0.02]"
-                >
-                  {item}
-                </div>
-              ))}
+              {jobMessage ? <p className="mt-2 text-[11px] text-muted">{jobMessage}</p> : null}
             </div>
           </div>
         </div>
+
+        <StudioResultsPanel
+          headerExtra={
+            resultImages.length > 0 ? (
+              <Link to="/gallery" className="text-xs tracking-tight text-muted transition-colors hover:text-ink dark:hover:text-white">
+                Galeride Gör
+              </Link>
+            ) : null
+          }
+        >
+          <ResultPreview tool={tool} config={config} isGenerating={isGenerating} resultImages={resultImages} />
+        </StudioResultsPanel>
       </div>
     </div>
   )
@@ -1023,33 +1045,31 @@ function ModelResultPreview({ tool, config, isGenerating, resultImages }) {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-black/[0.06] dark:border-white/[0.08]">
+    <StudioResultsViewport>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(122,107,88,0.22),transparent_45%)] dark:bg-[radial-gradient(circle_at_top,rgba(232,220,200,0.12),transparent_45%)]" />
-      <div className="relative aspect-[3/4] sm:aspect-square">
-        <div className="flex h-full flex-col justify-between p-4">
-          <div className="flex items-start justify-between gap-3">
-            <span className="rounded bg-[var(--elevated)] px-2 py-1 text-[10px] font-medium tracking-[0.08em] text-ink dark:bg-white/90 dark:text-black">
-              ORNEK
-            </span>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black/[0.04] text-champagne dark:bg-white/[0.06] dark:text-[#e8dcc8]">
-              <ToolIcon size={18} />
-            </div>
-          </div>
-
-          <div className="flex flex-1 items-center justify-center">
-            <div className="flex h-36 w-full max-w-[240px] items-center justify-center rounded-2xl border border-black/[0.05] bg-[var(--card-bg)] dark:border-white/[0.08]">
-              <ToolIcon size={52} strokeWidth={1.35} className="text-champagne dark:text-[#e8dcc8]" />
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-black/[0.05] bg-[var(--elevated)]/75 p-3 backdrop-blur dark:border-white/[0.08] dark:bg-black/15">
-            <p className="text-[10px] uppercase tracking-[0.08em] text-champagne-dim">Çıktı</p>
-            <h3 className="mt-1 text-sm font-medium tracking-[-0.02em] text-ink dark:text-white">{config.previewTitle}</h3>
-            <p className="mt-1 text-[11px] leading-5 text-muted">{config.previewNote}</p>
+      <div className="relative flex h-full flex-col justify-between p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <span className="rounded bg-[var(--elevated)] px-2 py-1 text-[10px] font-medium tracking-[0.08em] text-ink dark:bg-white/90 dark:text-black">
+            ORNEK
+          </span>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black/[0.04] text-champagne dark:bg-white/[0.06] dark:text-[#e8dcc8]">
+            <ToolIcon size={18} />
           </div>
         </div>
+
+        <div className="flex flex-1 items-center justify-center">
+          <div className="flex h-28 w-28 items-center justify-center rounded-full border border-black/[0.05] bg-[var(--card-bg)] dark:border-white/[0.08]">
+            <ToolIcon size={42} strokeWidth={1.35} className="text-champagne dark:text-[#e8dcc8]" />
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-black/[0.05] bg-[var(--elevated)]/75 p-3 backdrop-blur dark:border-white/[0.08] dark:bg-black/15">
+          <p className="text-[10px] uppercase tracking-[0.08em] text-champagne-dim">Çıktı</p>
+          <h3 className="mt-1 text-sm font-medium tracking-[-0.02em] text-ink dark:text-white">{config.previewTitle}</h3>
+          <p className="mt-1 text-[11px] leading-5 text-muted">{config.previewNote}</p>
+        </div>
       </div>
-    </div>
+    </StudioResultsViewport>
   )
 }
 
@@ -1075,7 +1095,7 @@ function ProModelWorkspace({ tool, config, credits, creditCost, onGenerate, isGe
         <p className="mt-1 text-[12px] tracking-[-0.01em] text-muted">{config.subtitle}</p>
       </div>
 
-      <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[340px_1fr]">
+      <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[360px_1fr]">
         <div className="overflow-hidden rounded-xl border border-black/[0.06] bg-[linear-gradient(180deg,rgba(255,255,255,0.72),rgba(255,255,255,0.5))] shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
           <button
             type="button"
@@ -1227,18 +1247,16 @@ function ProModelWorkspace({ tool, config, credits, creditCost, onGenerate, isGe
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-black/[0.06] bg-[linear-gradient(180deg,rgba(255,255,255,0.62),rgba(255,255,255,0.46))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.32)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:p-5">
-          <div className="mb-4 flex items-center justify-between">
+        <div className="flex min-h-[640px] flex-col overflow-hidden rounded-xl border border-black/[0.06] bg-[linear-gradient(180deg,rgba(255,255,255,0.62),rgba(255,255,255,0.46))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.32)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:p-5">
+          <div className="mb-4 flex shrink-0 items-center justify-between">
             <h3 className="text-[13px] font-medium tracking-[-0.01em] text-muted">Sonuçlar</h3>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="flex flex-col gap-2 sm:col-span-2">
-              <ModelResultPreview tool={tool} config={config} isGenerating={isGenerating} resultImages={resultImages} />
-            </div>
+          <div className="min-h-0 flex-1">
+            <ModelResultPreview tool={tool} config={config} isGenerating={isGenerating} resultImages={resultImages} />
           </div>
 
-          <div className="mt-4">
+          <div className="mt-4 shrink-0">
             <div className="rounded-[1.35rem] border border-black/[0.05] bg-[var(--card-bg)] p-4 dark:border-white/[0.06]">
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -1253,7 +1271,7 @@ function ProModelWorkspace({ tool, config, credits, creditCost, onGenerate, isGe
               {resultImages.length > 0 ? (
                 <div className="grid grid-cols-3 gap-2">
                   {resultImages.slice(0, 3).map((url, i) => (
-                    <div key={url} className="overflow-hidden rounded-xl aspect-[3/4]">
+                    <div key={url} className="aspect-[5/4] overflow-hidden rounded-xl">
                       <img src={url} alt={`Sonuç ${i + 1}`} className="h-full w-full object-cover" />
                     </div>
                   ))}
@@ -1526,22 +1544,24 @@ function ProTryonWorkspace({ tool, credits, onGenerate, isGenerating, jobMessage
         </div>
 
         {/* ── RIGHT PANEL ── */}
-        <div className="glass-card min-h-[600px] rounded-[1.5rem] p-4 sm:p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-[13px] font-medium tracking-[-0.01em] text-muted">Sonuçlar</h3>
-            {resultImages.length > 0 && (
+        <StudioResultsPanel
+          headerExtra={
+            resultImages.length > 0 ? (
               <Link to="/gallery" className="text-xs tracking-tight text-muted transition-colors hover:text-ink dark:hover:text-white">
                 Galeride Gör
               </Link>
-            )}
-          </div>
-
-          <ResultImages images={resultImages} isGenerating={isGenerating} tool={tool} />
-
-          {!isGenerating && resultImages.length === 0 && (
-            <div className="relative overflow-hidden rounded-[1.4rem] border border-black/[0.06] dark:border-white/[0.08]">
-              <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at top left, rgba(122,107,88,0.24), transparent 40%)' }} />
-              <div className="relative flex aspect-[5/4] flex-col items-center justify-center gap-4 p-8 text-center">
+            ) : null
+          }
+        >
+          {isGenerating || resultImages.length > 0 ? (
+            <ResultImages images={resultImages} isGenerating={isGenerating} tool={tool} />
+          ) : (
+            <StudioResultsViewport className="flex flex-col items-center justify-center gap-4 p-8 text-center">
+              <div
+                className="absolute inset-0"
+                style={{ background: 'radial-gradient(circle at top left, rgba(122,107,88,0.24), transparent 40%)' }}
+              />
+              <div className="relative flex h-full flex-col items-center justify-center gap-4">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-black/[0.06] bg-[var(--card-bg)] text-champagne dark:border-white/[0.08]">
                   <Shuffle size={28} strokeWidth={1.4} />
                 </div>
@@ -1549,7 +1569,6 @@ function ProTryonWorkspace({ tool, credits, onGenerate, isGenerating, jobMessage
                   <p className="text-[13px] font-medium tracking-tight text-ink dark:text-white">Ürün + Model yükle</p>
                   <p className="text-[11px] text-muted">Çözünürlük ve kaliteyi seçtikten sonra Oluştur'a bas</p>
                 </div>
-                {/* live cost summary */}
                 <div className="w-full max-w-xs rounded-2xl border border-black/[0.05] bg-[var(--card-bg)] p-4 dark:border-white/[0.06]">
                   <div className="grid grid-cols-2 gap-2 text-left">
                     {[
@@ -1566,9 +1585,9 @@ function ProTryonWorkspace({ tool, credits, onGenerate, isGenerating, jobMessage
                   </div>
                 </div>
               </div>
-            </div>
+            </StudioResultsViewport>
           )}
-        </div>
+        </StudioResultsPanel>
       </div>
     </div>
   )
@@ -1651,27 +1670,28 @@ function DecoupeWorkspace({ tool, credits, onGenerate, isGenerating, jobMessage,
           </div>
         </div>
 
-        <div className="glass-card min-h-[600px] rounded-[1.5rem] p-4 sm:p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-[13px] font-medium tracking-[-0.01em] text-muted">Sonuçlar</h3>
-            {resultImages.length > 0 && (
+        <StudioResultsPanel
+          headerExtra={
+            resultImages.length > 0 ? (
               <Link to="/gallery" className="text-xs tracking-tight text-muted transition-colors hover:text-ink dark:hover:text-white">Galeride Gör</Link>
-            )}
-          </div>
-          <ResultImages images={resultImages} isGenerating={isGenerating} tool={tool} />
-          {!isGenerating && resultImages.length === 0 && (
-            <div className="relative overflow-hidden rounded-[1.4rem] border border-black/[0.06] dark:border-white/[0.08]">
+            ) : null
+          }
+        >
+          {isGenerating || resultImages.length > 0 ? (
+            <ResultImages images={resultImages} isGenerating={isGenerating} tool={tool} />
+          ) : (
+            <StudioResultsViewport className="flex flex-col items-center justify-center gap-4 p-8 text-center">
               <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at top left, rgba(122,107,88,0.24), transparent 40%)' }} />
-              <div className="relative flex aspect-[5/4] flex-col items-center justify-center gap-4 p-8 text-center">
+              <div className="relative flex h-full flex-col items-center justify-center gap-4">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-black/[0.06] bg-[var(--card-bg)] text-champagne dark:border-white/[0.08]">
                   <Shuffle size={28} strokeWidth={1.4} />
                 </div>
                 <p className="text-[13px] font-medium text-ink dark:text-white">Ürün fotoğrafı yükle</p>
                 <p className="text-[11px] text-muted">Packshot: temiz arka plan, düz sergi veya askıda sunum</p>
               </div>
-            </div>
+            </StudioResultsViewport>
           )}
-        </div>
+        </StudioResultsPanel>
       </div>
     </div>
   )
@@ -1789,27 +1809,28 @@ function SwapWorkspace({ tool, credits, onGenerate, isGenerating, jobMessage, up
           </div>
         </div>
 
-        <div className="glass-card min-h-[600px] rounded-[1.5rem] p-4 sm:p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-[13px] font-medium tracking-[-0.01em] text-muted">Sonuçlar</h3>
-            {resultImages.length > 0 && (
+        <StudioResultsPanel
+          headerExtra={
+            resultImages.length > 0 ? (
               <Link to="/gallery" className="text-xs tracking-tight text-muted transition-colors hover:text-ink dark:hover:text-white">Galeride Gör</Link>
-            )}
-          </div>
-          <ResultImages images={resultImages} isGenerating={isGenerating} tool={tool} />
-          {!isGenerating && resultImages.length === 0 && (
-            <div className="relative overflow-hidden rounded-[1.4rem] border border-black/[0.06] dark:border-white/[0.08]">
+            ) : null
+          }
+        >
+          {isGenerating || resultImages.length > 0 ? (
+            <ResultImages images={resultImages} isGenerating={isGenerating} tool={tool} />
+          ) : (
+            <StudioResultsViewport className="flex flex-col items-center justify-center gap-4 p-8 text-center">
               <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at top left, rgba(122,107,88,0.24), transparent 40%)' }} />
-              <div className="relative flex aspect-[5/4] flex-col items-center justify-center gap-4 p-8 text-center">
+              <div className="relative flex h-full flex-col items-center justify-center gap-4">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-black/[0.06] bg-[var(--card-bg)] text-champagne dark:border-white/[0.08]">
                   <Shuffle size={28} strokeWidth={1.4} />
                 </div>
                 <p className="text-[13px] font-medium text-ink dark:text-white">Ürün + sahne yükle</p>
                 <p className="text-[11px] text-muted">Model-swap: kıyafet korunur, model/sahne dönüştürülür</p>
               </div>
-            </div>
+            </StudioResultsViewport>
           )}
-        </div>
+        </StudioResultsPanel>
       </div>
     </div>
   )
@@ -1957,22 +1978,24 @@ function CekimModelWorkspace({ tool, credits, creditCost, onGenerate, isGenerati
         </div>
 
         {/* ── RIGHT PANEL ── */}
-        <div className="glass-card min-h-[600px] rounded-[1.5rem] p-4 sm:p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-[13px] font-medium tracking-[-0.01em] text-muted">Sonuçlar</h3>
-            {resultImages.length > 0 && (
+        <StudioResultsPanel
+          headerExtra={
+            resultImages.length > 0 ? (
               <Link to="/gallery" className="text-xs tracking-tight text-muted transition-colors hover:text-ink dark:hover:text-white">
                 Galeride Gör
               </Link>
-            )}
-          </div>
-
-          <ResultImages images={resultImages} isGenerating={isGenerating} tool={tool} />
-
-          {!isGenerating && resultImages.length === 0 && (
-            <div className="relative overflow-hidden rounded-[1.4rem] border border-black/[0.06] dark:border-white/[0.08]">
-              <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at top left, rgba(122,107,88,0.24), transparent 40%), linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.12) 100%)' }} />
-              <div className="relative flex aspect-[5/4] flex-col items-center justify-center gap-4 p-8 text-center">
+            ) : null
+          }
+        >
+          {isGenerating || resultImages.length > 0 ? (
+            <ResultImages images={resultImages} isGenerating={isGenerating} tool={tool} />
+          ) : (
+            <StudioResultsViewport className="flex flex-col items-center justify-center gap-4 p-8 text-center">
+              <div
+                className="absolute inset-0"
+                style={{ background: 'radial-gradient(circle at top left, rgba(122,107,88,0.24), transparent 40%), linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.12) 100%)' }}
+              />
+              <div className="relative flex h-full flex-col items-center justify-center gap-4">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-black/[0.06] bg-[var(--card-bg)] text-champagne dark:border-white/[0.08]">
                   <Shuffle size={28} strokeWidth={1.4} />
                 </div>
@@ -1980,7 +2003,7 @@ function CekimModelWorkspace({ tool, credits, creditCost, onGenerate, isGenerati
                   <p className="text-[13px] font-medium tracking-tight text-ink dark:text-white">Model + Kıyafet yükle</p>
                   <p className="text-[11px] text-muted">Kategori ve modu seçtikten sonra Oluştur'a bas</p>
                 </div>
-                <div className="mt-2 grid grid-cols-2 gap-2 text-left w-full max-w-xs">
+                <div className="mt-2 grid w-full max-w-xs grid-cols-2 gap-2 text-left">
                   {[
                     ['Kategori', TRYON_DEFAULTS.category === 'auto' ? 'Otomatik' : tryonParams.category],
                     ['Mod', tryonParams.mode],
@@ -1994,15 +2017,15 @@ function CekimModelWorkspace({ tool, credits, creditCost, onGenerate, isGenerati
                   ))}
                 </div>
               </div>
-            </div>
+            </StudioResultsViewport>
           )}
-        </div>
+        </StudioResultsPanel>
       </div>
     </div>
   )
 }
 
-export default function FashionToolWorkspace({ tool }) {
+export default function StudioToolWorkspace({ tool }) {
   const { user, credits, setCredits } = useAuth()
   const [uploadedFiles, setUploadedFiles] = useState({})
   const [resultImages, setResultImages] = useState([])
@@ -2238,7 +2261,7 @@ export default function FashionToolWorkspace({ tool }) {
     return <ProModelWorkspace {...sharedProps} />
   }
 
-  if (tool.id === 'cekim-editorial' || tool.id === 'cekim-pose') {
+  if (tool.id === 'cekim-editorial' || tool.id === 'cekim-pose' || tool.id === 'cekim-video') {
     return <FastExpressWorkspace {...sharedProps} />
   }
 
@@ -2249,7 +2272,7 @@ export default function FashionToolWorkspace({ tool }) {
         <p className="mt-1 text-[12px] tracking-[-0.01em] text-muted">{config.subtitle}</p>
       </div>
 
-      <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[340px_1fr]">
+      <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[360px_1fr]">
         <div className="glass-card overflow-hidden rounded-[1.5rem]">
           <button
             type="button"
@@ -2395,19 +2418,9 @@ export default function FashionToolWorkspace({ tool }) {
           </div>
         </div>
 
-        <div className="glass-card min-h-[800px] rounded-[1.5rem] p-4 sm:p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-[13px] font-medium tracking-[-0.01em] text-muted">Sonuçlar</h3>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="flex flex-col gap-2 sm:col-span-2">
-              <ResultPreview tool={tool} config={config} isGenerating={isGenerating} resultImages={resultImages} />
-            </div>
-          </div>
-
-          {config.showHistory !== false && (
-            <div className="mt-4">
+        <StudioResultsPanel
+          footer={
+            config.showHistory !== false ? (
               <div className="rounded-[1.35rem] border border-black/[0.05] bg-[var(--card-bg)] p-4 dark:border-white/[0.06]">
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -2422,7 +2435,7 @@ export default function FashionToolWorkspace({ tool }) {
                 {resultImages.length > 0 ? (
                   <div className="grid grid-cols-3 gap-2">
                     {resultImages.slice(0, 3).map((url, i) => (
-                      <div key={url} className="overflow-hidden rounded-xl aspect-[3/4]">
+                      <div key={url} className="aspect-[5/4] overflow-hidden rounded-xl">
                         <img src={url} alt={`Sonuç ${i + 1}`} className="h-full w-full object-cover" />
                       </div>
                     ))}
@@ -2433,9 +2446,11 @@ export default function FashionToolWorkspace({ tool }) {
                   </div>
                 )}
               </div>
-            </div>
-          )}
-        </div>
+            ) : null
+          }
+        >
+          <ResultPreview tool={tool} config={config} isGenerating={isGenerating} resultImages={resultImages} />
+        </StudioResultsPanel>
       </div>
     </div>
   )

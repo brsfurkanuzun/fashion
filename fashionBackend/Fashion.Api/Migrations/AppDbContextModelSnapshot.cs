@@ -233,11 +233,53 @@ namespace Fashion.Api.Migrations
                     b.ToTable("ToolDefinitions");
                 });
 
+            modelBuilder.Entity("Fashion.Api.Models.PaymentOrder", b =>
+                {
+                    b.Property<string>("MerchantOid")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CreditsToGrant")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PackageKey")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<int>("PaymentAmountMinor")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("MerchantOid");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PaymentOrders");
+                });
+
             modelBuilder.Entity("Fashion.Api.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("AppleSub")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
@@ -252,6 +294,10 @@ namespace Fashion.Api.Migrations
                         .HasMaxLength(180)
                         .HasColumnType("character varying(180)");
 
+                    b.Property<string>("GoogleSub")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -264,7 +310,13 @@ namespace Fashion.Api.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AppleSub")
+                        .IsUnique();
+
                     b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("GoogleSub")
                         .IsUnique();
 
                     b.ToTable("Users");
@@ -312,6 +364,15 @@ namespace Fashion.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Fashion.Api.Models.PaymentOrder", b =>
+                {
+                    b.HasOne("Fashion.Api.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Fashion.Api.Models.User", b =>

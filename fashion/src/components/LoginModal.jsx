@@ -179,7 +179,7 @@ export default function LoginModal({ open, onClose, initialMode = 'login' }) {
 
     setLoading(false)
     onClose()
-    navigate('/fashion')
+    navigate('/studio')
   }
 
   const handleOAuthSuccess = async (payload) => {
@@ -192,7 +192,7 @@ export default function LoginModal({ open, onClose, initialMode = 'login' }) {
     })
     setLoading(false)
     onClose()
-    navigate('/fashion')
+    navigate('/studio')
   }
 
   if (!open) return null

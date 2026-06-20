@@ -127,7 +127,8 @@ INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion") VALUES
     ('20260608115832_DropExpenseTable', '9.0.8'),
     ('20260608122636_AddToolMultiplier', '9.0.8'),
     ('20260608123147_AddToolPricingVariants', '9.0.8'),
-    ('20260608155608_RemoveMultiplierAddQuality', '9.0.8')
+    ('20260608155608_RemoveMultiplierAddQuality', '9.0.8'),
+    ('20260619120000_AddExternalAuthAndPayments', '8.0.11')
 ON CONFLICT ("MigrationId") DO NOTHING;
 
 COMMIT;

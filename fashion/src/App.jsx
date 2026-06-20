@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import HomePage from './pages/HomePage'
 import PricingPage from './pages/PricingPage'
-import FashionPage from './pages/FashionPage'
+import StudioPage from './pages/StudioPage'
 import GalleryPage from './pages/GalleryPage'
 import SupportPage from './pages/SupportPage'
 import AccountPage from './pages/AccountPage'
@@ -13,6 +13,11 @@ import ChangelogPage from './pages/ChangelogPage'
 import CheckoutPage from './pages/CheckoutPage'
 import PaymentResultPage from './pages/PaymentResultPage'
 import RegisterForPurchasePage from './pages/RegisterForPurchasePage'
+
+function LegacyFashionRedirect() {
+  const location = useLocation()
+  return <Navigate to={`/studio${location.search}`} replace />
+}
 
 export default function App() {
   const [loginModal, setLoginModal] = useState({ open: false, mode: 'login' })
@@ -47,13 +52,14 @@ export default function App() {
           }
         />
         <Route
-          path="fashion"
+          path="studio"
           element={
             <ProtectedRoute>
-              <FashionPage />
+              <StudioPage />
             </ProtectedRoute>
           }
         />
+        <Route path="fashion" element={<LegacyFashionRedirect />} />
         <Route
           path="gallery"
           element={

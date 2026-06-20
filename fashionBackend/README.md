@@ -1,6 +1,10 @@
-# Fashion Backend Local Setup
+# Fashion Backend
 
-## 1) PostgreSQL + pgAdmin (Docker)
+## Railway (production)
+
+PostgreSQL + API deploy adımları: **[RAILWAY.md](./RAILWAY.md)**
+
+## Lokal geliştirme (PostgreSQL + Docker)
 
 ```bash
 cd fashionBackend

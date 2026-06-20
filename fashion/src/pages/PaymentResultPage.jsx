@@ -36,7 +36,7 @@ export default function PaymentResultPage({ ok }) {
       </p>
       <div className="flex flex-wrap justify-center gap-3">
         <Link
-          to="/fashion"
+          to="/studio"
           className="inline-flex items-center justify-center rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium px-5 py-2.5"
         >
           Stüdyoya git

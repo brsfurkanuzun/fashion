@@ -84,7 +84,7 @@ export const SidebarNavigationSlim = ({
         )}
       >
         <div className="flex justify-center px-3">
-          <Link to="/fashion" title="Fashion" className="outline-hidden">
+          <Link to="/studio" title="Stüdyo" className="outline-hidden">
             <UntitledLogoMinimal className="size-6" />
           </Link>
         </div>
@@ -332,7 +332,7 @@ export const SidebarNavigationSlim = ({
       <MobileNavigationHeader>
         <aside className="group flex h-full max-h-full w-full max-w-full flex-col justify-between overflow-y-auto bg-white pt-4 dark:bg-[#141414]">
           <div className="px-4">
-            <Link to="/fashion">
+            <Link to="/studio">
               <UntitledLogo className="h-6" />
             </Link>
           </div>
@@ -378,5 +378,5 @@ export const SidebarNavigationSlim = ({
 
 const defaultFooterItems: NavItemWithIcon[] = [
   { label: 'Destek', href: '/', icon: LifeBuoy01 },
-  { label: 'Ayarlar', href: '/fashion', icon: Settings01 },
+  { label: 'Ayarlar', href: '/studio', icon: Settings01 },
 ]

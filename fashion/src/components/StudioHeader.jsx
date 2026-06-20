@@ -3,17 +3,17 @@ import { Coins } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 /** Masaüstü üst bar — mobil menü SidebarNavigationSlim içinde */
-export default function FashionHeader() {
+export default function StudioHeader() {
   const { credits } = useAuth()
 
   return (
     <header className="fixed top-0 inset-x-0 z-40 glass-nav hidden lg:block lg:right-[68px]">
       <div className="h-14 px-5 sm:px-8 flex items-center justify-between">
         <Link
-          to="/fashion"
+          to="/studio"
           className="font-serif text-xl tracking-tight text-ink transition-opacity cursor-pointer hover:opacity-80"
         >
-          Fashion
+          Stüdyo
         </Link>
 
         <span

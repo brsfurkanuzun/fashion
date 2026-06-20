@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FASHION_TOOLS, getFashionTool } from '@/data/fashionTools'
-import FashionToolWorkspace from '@/components/FashionToolWorkspace'
+import { STUDIO_TOOLS, getStudioTool } from '@/data/studioTools'
+import StudioToolWorkspace from '@/components/StudioToolWorkspace'
 
 const MODE_ITEMS = [
   { id: 'cekim', label: 'FAST', subtitle: 'Hızlı Mod' },
@@ -26,12 +26,12 @@ const TOOL_LABELS = {
   'pro-video': 'VIDEO',
 }
 
-export default function FashionPage() {
+export default function StudioPage() {
   const [searchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState('cekim')
   const [activeToolId, setActiveToolId] = useState(null)
   const currentTools = useMemo(
-    () => FASHION_TOOLS.filter((tool) => tool.workspace === activeTab),
+    () => STUDIO_TOOLS.filter((tool) => tool.workspace === activeTab),
     [activeTab]
   )
 
@@ -39,8 +39,8 @@ export default function FashionPage() {
     const ws = searchParams.get('ws')
     const tool = searchParams.get('tool')
     if (ws === 'produksiyon') setActiveTab('produksiyon')
-    if (tool && getFashionTool(tool)) {
-      const t = getFashionTool(tool)
+    if (tool && getStudioTool(tool)) {
+      const t = getStudioTool(tool)
       setActiveToolId(tool)
       if (t?.workspace === 'produksiyon') setActiveTab('produksiyon')
       else if (t?.workspace === 'cekim') setActiveTab('cekim')
@@ -63,7 +63,7 @@ export default function FashionPage() {
     setActiveToolId(null)
   }
 
-  const activeTool = activeToolId ? getFashionTool(activeToolId) : null
+  const activeTool = activeToolId ? getStudioTool(activeToolId) : null
 
   return (
     <div className="pt-20 pb-16 min-h-screen">
@@ -152,7 +152,7 @@ export default function FashionPage() {
           </p>
         )}
 
-        {activeTool && <FashionToolWorkspace tool={activeTool} />}
+        {activeTool && <StudioToolWorkspace tool={activeTool} />}
       </div>
     </div>
   )
