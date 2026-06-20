@@ -1,9 +1,11 @@
-# Render / Docker — .NET 8 Web API
+# Railway: build context = repo kökü (Root Directory boş veya /)
+# Local: docker build -f fashionBackend/Fashion.Api/Dockerfile .
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY Fashion.Api.csproj .
-RUN dotnet restore Fashion.Api.csproj
-COPY . .
+COPY fashionBackend/Fashion.Api/Fashion.Api.csproj fashionBackend/Fashion.Api/
+RUN dotnet restore fashionBackend/Fashion.Api/Fashion.Api.csproj
+COPY fashionBackend/Fashion.Api/ fashionBackend/Fashion.Api/
+WORKDIR /src/fashionBackend/Fashion.Api
 RUN dotnet publish Fashion.Api.csproj -c Release -o /app/publish --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final

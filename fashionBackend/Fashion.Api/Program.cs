@@ -5,6 +5,7 @@ using Fashion.Api.Auth;
 using Fashion.Api.Security;
 using Fashion.Api.Services;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,7 +34,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     }
     else
     {
-        var connectionString = DatabaseConnection.Resolve(builder.Configuration);
+        var connectionString = ResolvePostgresConnectionString(builder.Configuration);
         options.UseNpgsql(connectionString, npgsql =>
             npgsql.EnableRetryOnFailure(
                 maxRetryCount: 5,
@@ -79,11 +80,42 @@ try
         }
 
         await SeedData.InitializeAsync(db);
+        await PayTrPaymentEndpoints.EnsurePaymentOrdersTableAsync(db);
+        await ExternalAuthSchema.EnsureExternalAuthColumnsAsync(db);
     }
 }
 catch (Exception ex) when (continueOnInitFailure)
 {
     initLogger.LogError(ex, "Database init failed; continuing (Database:ContinueOnInitFailure=true). Fix PostgreSQL / ConnectionStrings.");
+}
+
+static string ResolvePostgresConnectionString(IConfiguration configuration)
+{
+    var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+    if (!string.IsNullOrWhiteSpace(databaseUrl))
+    {
+        return ParseDatabaseUrl(databaseUrl);
+    }
+
+    return configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection or DATABASE_URL is required.");
+}
+
+static string ParseDatabaseUrl(string databaseUrl)
+{
+    var uri = new Uri(databaseUrl);
+    var userInfo = uri.UserInfo.Split(':', 2);
+    var builder = new NpgsqlConnectionStringBuilder
+    {
+        Host = uri.Host,
+        Port = uri.Port > 0 ? uri.Port : 5432,
+        Database = uri.AbsolutePath.TrimStart('/'),
+        Username = Uri.UnescapeDataString(userInfo[0]),
+        Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty,
+        SslMode = SslMode.Require,
+        TrustServerCertificate = true,
+    };
+    return builder.ConnectionString;
 }
 
 app.MapGet("/api/health", () => Results.Ok(new { status = "ok", service = "fashion-backend" }));

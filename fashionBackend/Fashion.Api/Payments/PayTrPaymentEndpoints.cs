@@ -24,26 +24,27 @@ public static class PayTrPaymentEndpoints
         }
 
         var provider = db.Database.ProviderName ?? string.Empty;
-        if (!provider.Contains("MySql", StringComparison.OrdinalIgnoreCase))
+        if (!provider.Contains("Npgsql", StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
 
         await db.Database.ExecuteSqlRawAsync(
             """
-            CREATE TABLE IF NOT EXISTS `PaymentOrders` (
-              `MerchantOid` varchar(64) CHARACTER SET utf8mb4 NOT NULL,
-              `UserId` char(36) COLLATE ascii_general_ci NOT NULL,
-              `PackageKey` varchar(32) CHARACTER SET utf8mb4 NOT NULL,
-              `PaymentAmountMinor` int NOT NULL,
-              `CreditsToGrant` int NOT NULL,
-              `Status` varchar(20) CHARACTER SET utf8mb4 NOT NULL,
-              `CreatedAtUtc` datetime(6) NOT NULL,
-              `CompletedAtUtc` datetime(6) NULL,
-              PRIMARY KEY (`MerchantOid`),
-              KEY `IX_PaymentOrders_UserId` (`UserId`),
-              CONSTRAINT `FK_PaymentOrders_Users_UserId` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            CREATE TABLE IF NOT EXISTS "PaymentOrders" (
+              "MerchantOid" character varying(64) NOT NULL,
+              "UserId" uuid NOT NULL,
+              "PackageKey" character varying(40) NOT NULL,
+              "PaymentAmountMinor" integer NOT NULL,
+              "CreditsToGrant" integer NOT NULL,
+              "Status" character varying(20) NOT NULL,
+              "CreatedAtUtc" timestamp with time zone NOT NULL,
+              "CompletedAtUtc" timestamp with time zone NULL,
+              CONSTRAINT "PK_PaymentOrders" PRIMARY KEY ("MerchantOid"),
+              CONSTRAINT "FK_PaymentOrders_Users_UserId"
+                FOREIGN KEY ("UserId") REFERENCES "Users" ("Id") ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS "IX_PaymentOrders_UserId" ON "PaymentOrders" ("UserId");
             """,
             cancellationToken);
     }
