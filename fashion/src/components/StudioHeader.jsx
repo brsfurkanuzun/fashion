@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Coins } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { STUDIO_NAME } from '@/lib/brand'
 
 /** Masaüstü üst bar — mobil menü SidebarNavigationSlim içinde */
 export default function StudioHeader() {
@@ -13,7 +14,7 @@ export default function StudioHeader() {
           to="/studio"
           className="font-serif text-xl tracking-tight text-ink transition-opacity cursor-pointer hover:opacity-80"
         >
-          Stüdyo
+          {STUDIO_NAME}
         </Link>
 
         <span

@@ -63,96 +63,103 @@ export default function StudioPage() {
     setActiveToolId(null)
   }
 
+  const handleToolSelect = (toolId, workspace) => {
+    setActiveTab(workspace)
+    setActiveToolId(toolId)
+  }
+
   const activeTool = activeToolId ? getStudioTool(activeToolId) : null
 
   return (
-    <div className="pt-20 pb-16 min-h-screen">
-      <div className="max-w-[1400px] mx-auto px-5 sm:px-8">
-        <div className="mb-8">
-          <div className="flex flex-col gap-4 border-b border-black/8 pb-4 dark:border-white/10 sm:grid sm:grid-cols-[220px_minmax(0,1fr)] sm:items-end sm:gap-5">
-            <div className="flex w-full items-center sm:w-[220px]">
-              {MODE_ITEMS.map((mode) => {
-                const isActive = activeTab === mode.id
-                return (
+    <div className="min-h-screen pt-20 pb-16">
+      <div className="mx-auto flex max-w-[1400px] flex-col px-5 sm:px-8 lg:flex-row lg:gap-0">
+        <aside className="mb-6 w-full shrink-0 border-b border-black/8 pb-6 dark:border-white/10 lg:mb-0 lg:w-[240px] lg:border-b-0 lg:border-r lg:pb-0 lg:pr-8 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
+          <nav className="flex flex-col gap-6">
+            {MODE_ITEMS.map((mode) => {
+              const modeTools = STUDIO_TOOLS.filter((tool) => tool.workspace === mode.id)
+              const isModeActive = activeTab === mode.id
+
+              return (
+                <div key={mode.id}>
                   <button
-                    key={mode.id}
                     type="button"
                     onClick={() => handleTabChange(mode.id)}
-                    className={`relative flex min-h-[48px] flex-1 flex-col justify-center px-3 text-center transition-colors sm:px-4 ${
-                      isActive
+                    className={`relative w-full rounded-md px-3 py-2 text-left transition-colors ${
+                      isModeActive
                         ? 'text-ink dark:text-white'
-                        : 'text-muted hover:text-ink dark:text-white/45 dark:hover:text-white/75'
+                        : 'text-muted hover:text-ink dark:text-white/45 dark:hover:text-white/80'
                     }`}
                   >
-                    <span className="block text-[13px] font-semibold uppercase tracking-[0.12em] sm:text-[14px]">
+                    <span className="block text-[13px] font-semibold uppercase tracking-[0.1em]">
                       {mode.label}
                     </span>
                     <span
-                      className={`mt-0.5 block text-[9px] tracking-wide sm:text-[10px] ${
-                        isActive ? 'text-subtle dark:text-white/55' : 'text-subtle/70 dark:text-white/25'
+                      className={`mt-0.5 block text-[10px] tracking-wide ${
+                        isModeActive ? 'text-subtle dark:text-white/50' : 'text-subtle/70 dark:text-white/25'
                       }`}
                     >
                       {mode.subtitle}
                     </span>
-                    {isActive && (
+                    {isModeActive && (
                       <motion.div
                         layoutId="studio-mode-line"
-                        className="absolute inset-x-3 bottom-0 h-px bg-champagne dark:bg-[#e8dcc8]"
+                        className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-champagne dark:bg-[#e8dcc8]"
                       />
                     )}
                   </button>
-                )
-              })}
-            </div>
 
-            <div className="min-w-0 border-t border-black/8 pt-3 dark:border-white/10 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
-              <div className="scrollbar-hide -mx-5 overflow-x-auto px-5 sm:mx-0 sm:px-0 lg:overflow-visible">
-                <div className="flex min-h-[48px] min-w-max items-center gap-1 lg:min-w-0 lg:flex-wrap lg:gap-y-2">
-                  {currentTools.map((tool) => {
-                    const isActive = activeToolId === tool.id || (!activeToolId && currentTools[0]?.id === tool.id)
-                    return (
-                      <button
-                        key={tool.id}
-                        type="button"
-                        onClick={() => setActiveToolId(tool.id)}
-                        className={`relative flex min-h-[48px] flex-shrink-0 items-center px-3 py-2 text-[10px] uppercase tracking-[0.06em] transition-colors duration-200 sm:px-4 sm:text-[11px] sm:tracking-[0.08em] ${
-                          isActive
-                            ? 'text-ink dark:text-white'
-                            : 'text-muted hover:text-ink dark:text-white/50 dark:hover:text-white/75'
-                        }`}
-                      >
-                        <span className="flex items-center gap-1">
-                          {TOOL_LABELS[tool.id] ?? tool.label.toUpperCase()}
-                          {tool.isNew && (
-                            <span className="inline-flex items-center rounded border border-champagne/25 bg-champagne/12 px-1 py-[1px] text-[7px] font-semibold tracking-[0.05em] text-champagne dark:border-[#e8dcc8]/25 dark:bg-[#e8dcc8]/12 dark:text-[#e8dcc8]">
-                              YENI
-                            </span>
+                  <div className="mt-1.5 flex flex-col gap-0.5 border-l border-black/8 pl-3 dark:border-white/10">
+                    {modeTools.map((tool) => {
+                      const isToolActive =
+                        activeToolId === tool.id
+                        || (isModeActive && !activeToolId && modeTools[0]?.id === tool.id)
+
+                      return (
+                        <button
+                          key={tool.id}
+                          type="button"
+                          onClick={() => handleToolSelect(tool.id, mode.id)}
+                          className={`relative rounded-md px-2 py-1.5 text-left text-[11px] uppercase tracking-[0.08em] transition-colors ${
+                            isToolActive
+                              ? 'text-ink dark:text-white'
+                              : 'text-muted hover:text-ink dark:text-white/50 dark:hover:text-white/80'
+                          }`}
+                        >
+                          <span className="flex items-center gap-1.5">
+                            {TOOL_LABELS[tool.id] ?? tool.label.toUpperCase()}
+                            {tool.isNew && (
+                              <span className="inline-flex items-center rounded border border-champagne/25 bg-champagne/12 px-1 py-[1px] text-[7px] font-semibold tracking-[0.05em] text-champagne dark:border-[#e8dcc8]/25 dark:bg-[#e8dcc8]/12 dark:text-[#e8dcc8]">
+                                YENI
+                              </span>
+                            )}
+                          </span>
+                          {isToolActive && (
+                            <motion.div
+                              layoutId="studio-selection-line"
+                              className="absolute inset-y-1 left-0 w-0.5 rounded-full bg-champagne dark:bg-[#e8dcc8]"
+                            />
                           )}
-                        </span>
-                        {isActive && (
-                          <motion.div
-                            layoutId="studio-selection-line"
-                            className="absolute inset-x-3 bottom-0 h-px bg-champagne dark:bg-[#e8dcc8]"
-                          />
-                        )}
-                      </button>
-                    )
-                  })}
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
+              )
+            })}
+          </nav>
+        </aside>
+
+        <div className="min-w-0 flex-1 lg:pl-10">
+          {!activeTool && (
+            <p className="mb-6 text-sm font-light text-muted">
+              {activeTab === 'cekim'
+                ? 'FAST modda hızlı çekim üretimleri için bir araç seçin.'
+                : 'PRO modda gelişmiş üretim araçlarından birini seçin.'}
+            </p>
+          )}
+
+          {activeTool && <StudioToolWorkspace tool={activeTool} />}
         </div>
-
-        {!activeTool && (
-          <p className="text-center text-sm text-muted font-light mb-6">
-            {activeTab === 'cekim'
-              ? 'FAST modda hızlı çekim üretimleri için bir araç seçin.'
-              : 'PRO modda gelişmiş üretim araçlarından birini seçin.'}
-          </p>
-        )}
-
-        {activeTool && <StudioToolWorkspace tool={activeTool} />}
       </div>
     </div>
   )

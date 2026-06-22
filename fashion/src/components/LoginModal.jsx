@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { X, Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { apiUrl } from '@/lib/api'
+import { SITE_NAME } from '@/lib/brand'
 import SocialOAuthButtons from './SocialOAuthButtons'
 
 const MODES = {
@@ -230,7 +231,7 @@ export default function LoginModal({ open, onClose, initialMode = 'login' }) {
           <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-champagne/5 blur-3xl" />
 
           <div className="relative">
-            <span className="font-serif text-2xl tracking-tight">nuladesign</span>
+            <span className="font-serif text-2xl tracking-tight">{SITE_NAME}</span>
           </div>
 
           <div className="relative">
@@ -248,7 +249,7 @@ export default function LoginModal({ open, onClose, initialMode = 'login' }) {
             </p>
           </div>
 
-          <p className="relative text-xs text-subtle">© nuladesign</p>
+          <p className="relative text-xs text-subtle">© {SITE_NAME}</p>
         </div>
 
         {/* Sağ panel — form */}
@@ -271,7 +272,7 @@ export default function LoginModal({ open, onClose, initialMode = 'login' }) {
           ) : (
             <>
               <div className="lg:hidden mb-8">
-                <span className="font-serif text-xl">nuladesign</span>
+                <span className="font-serif text-xl">{SITE_NAME}</span>
               </div>
 
               <h2 id="auth-title" className="font-serif text-2xl sm:text-3xl tracking-tight pr-8">

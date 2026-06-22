@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, Mail } from 'lucide-react'
+import { SITE_NAME } from '@/lib/brand'
 
 function InstagramIcon({ className }) {
   return (
@@ -70,7 +71,7 @@ export default function Footer({ onOpenLogin }) {
                 to="/"
                 className="font-serif text-2xl sm:text-[1.65rem] tracking-tight text-ink inline-block cursor-pointer hover:opacity-85 transition-opacity duration-200"
               >
-                nuladesign
+                {SITE_NAME}
               </Link>
               <p className="mt-4 max-w-sm text-[0.9375rem] leading-relaxed text-muted font-light">
                 Tek ürün fotoğrafından editöryal kampanya görselleri — stüdyo kalitesinde, dakikalar içinde.
@@ -157,7 +158,7 @@ export default function Footer({ onOpenLogin }) {
 
         <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-faint pt-8 sm:flex-row sm:items-end">
           <p className="text-center text-sm text-subtle font-light sm:text-left">
-            © {year} nuladesign. Tüm hakları saklıdır.
+            © {year} {SITE_NAME}. Tüm hakları saklıdır.
           </p>
           <p className="text-center text-xs text-subtle/90 font-light tracking-wide sm:text-right max-w-md">
             Görseller örnek amaçlıdır; sonuçlar ürün ve ayarlara göre değişebilir.

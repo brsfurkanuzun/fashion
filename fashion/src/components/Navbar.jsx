@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import ThemeToggle from './ThemeToggle'
 import { useAuth } from '../context/AuthContext'
+import { SITE_NAME } from '@/lib/brand'
 
 const links = [
   { to: '/#ozellikler', label: 'Özellikler' },
@@ -43,7 +44,7 @@ export default function Navbar({ onOpenLogin }) {
           to="/"
           className="font-serif text-[1.5rem] sm:text-[1.55rem] tracking-tight text-ink cursor-pointer hover:opacity-80 transition-opacity duration-200"
         >
-          nuladesign
+          {SITE_NAME}
         </Link>
 
         <nav className="hidden lg:flex items-center gap-8" aria-label="Ana menü">

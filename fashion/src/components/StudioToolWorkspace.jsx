@@ -2,19 +2,25 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { apiUrl, fetchToolPricingMap, getToolQualities } from '@/lib/api'
+import { SITE_DOWNLOAD_PREFIX } from '@/lib/brand'
 import {
-  ArrowRight,
+  STUDIO_GLASS_CARD,
+  STUDIO_GLASS_PANEL,
+  STUDIO_UPLOAD_SHELL,
+  StudioCreditSummary,
+  StudioGenerateButton,
+  StudioGlassDivider,
+  StudioSegmentGrid,
+} from '@/components/ui/studio-controls'
+import {
   CheckCircle,
   ChevronDown,
-  ChevronLeft,
   CircleHelp,
   Download,
   History,
   ImagePlus,
   Lock,
   Loader,
-  Play,
-  Settings2,
   Shuffle,
   Upload,
   X,
@@ -586,7 +592,7 @@ function SliderField({ field }) {
   )
 }
 
-function UploadCard({ item, toolLabel, preview, onFileChange }) {
+function UploadCard({ item, toolLabel, preview, onFileChange, compact = false }) {
   const inputRef = useRef(null)
 
   const handleClick = () => {
@@ -608,7 +614,7 @@ function UploadCard({ item, toolLabel, preview, onFileChange }) {
   }
 
   return (
-    <div className="rounded-2xl border border-black/[0.05] p-3 dark:border-white/[0.06]">
+    <div className={`${STUDIO_UPLOAD_SHELL} ${compact ? 'min-w-[180px] flex-1 sm:max-w-[220px]' : ''}`}>
       <div className="mb-2 flex items-center gap-1.5">
         <label className="text-[10px] uppercase tracking-[0.05em] text-muted">{item.label}</label>
         {!item.locked && <CircleHelp size={13} className="text-subtle" />}
@@ -628,7 +634,7 @@ function UploadCard({ item, toolLabel, preview, onFileChange }) {
       <input ref={inputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleChange} />
 
       {item.locked ? (
-        <div className="flex h-24 flex-col items-center justify-center rounded-2xl border border-dashed border-black/[0.08] bg-[var(--card-bg)] px-4 text-center dark:border-white/[0.08]">
+        <div className={`flex flex-col items-center justify-center rounded-2xl border border-dashed border-black/[0.08] bg-[var(--card-bg)] px-4 text-center dark:border-white/[0.08] ${compact ? 'h-24' : 'h-24'}`}>
           <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-xl bg-black/[0.04] text-muted dark:bg-white/[0.05]">
             <Lock size={14} />
           </div>
@@ -636,7 +642,7 @@ function UploadCard({ item, toolLabel, preview, onFileChange }) {
         </div>
       ) : preview ? (
         <button type="button" onClick={handleClick} className="group relative w-full overflow-hidden rounded-2xl border border-black/[0.05] dark:border-white/[0.08]">
-          <img src={preview} alt={item.label} className="h-28 w-full object-cover" />
+          <img src={preview} alt={item.label} className={`w-full object-cover ${compact ? 'h-24' : 'h-28'}`} />
           <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-200 group-hover:bg-black/30 group-hover:opacity-100">
             <span className="inline-flex items-center gap-1 rounded-full bg-[var(--elevated)] px-2.5 py-1 text-[10px] font-medium text-ink shadow-sm dark:bg-[#171717] dark:text-white">
               <Upload size={12} />
@@ -648,18 +654,18 @@ function UploadCard({ item, toolLabel, preview, onFileChange }) {
         <button
           type="button"
           onClick={handleClick}
-          className="group relative w-full overflow-hidden rounded-2xl border border-black/[0.05] bg-[linear-gradient(180deg,rgba(122,107,88,0.09),rgba(0,0,0,0))] dark:border-white/[0.08]"
+          className="group relative w-full overflow-hidden rounded-xl border border-dashed border-champagne/20 bg-[linear-gradient(135deg,rgba(122,107,88,0.12),transparent_55%)] transition-all duration-200 hover:border-champagne/35 dark:border-[#e8dcc8]/20 dark:bg-[linear-gradient(135deg,rgba(232,220,200,0.08),transparent_55%)] dark:hover:border-[#e8dcc8]/35"
         >
-          <div className="flex h-28 flex-col items-center justify-center gap-2 bg-[var(--card-bg)]/30 px-4 text-center">
-            <div className="absolute left-2 top-2 rounded-full bg-[var(--elevated)] px-2 py-0.5 text-[9px] font-medium tracking-[0.08em] text-ink dark:bg-white/90 dark:text-black">
+          <div className={`flex w-full items-center gap-3 bg-[var(--card-bg)]/30 px-3 text-left ${compact ? 'h-24' : 'h-28 flex-col justify-center px-4 text-center'}`}>
+            <div className={`absolute left-2 top-2 rounded-full bg-[var(--elevated)] px-2 py-0.5 text-[9px] font-medium tracking-[0.08em] text-ink dark:bg-white/90 dark:text-black ${compact ? '' : ''}`}>
               {item.badge ?? 'ÖRNEK'}
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-black/[0.04] text-champagne shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] dark:bg-white/[0.06]">
-              <ImagePlus size={18} />
+            <div className={`flex shrink-0 items-center justify-center rounded-2xl bg-black/[0.04] text-champagne shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] dark:bg-white/[0.06] ${compact ? 'h-11 w-11' : 'h-10 w-10'}`}>
+              <ImagePlus size={compact ? 16 : 18} />
             </div>
-            <div>
-              <p className="text-[12px] font-medium text-ink dark:text-white">{toolLabel}</p>
-              <p className="mt-1 text-[10px] text-muted">{item.action}</p>
+            <div className={compact ? 'min-w-0 flex-1 pr-1' : ''}>
+              {!compact && <p className="text-[12px] font-medium text-ink dark:text-white">{toolLabel}</p>}
+              <p className={`text-muted ${compact ? 'text-[10px] leading-snug' : 'mt-1 text-[10px]'}`}>{item.action}</p>
             </div>
             <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-200 group-hover:bg-black/10 group-hover:opacity-100 dark:group-hover:bg-black/20">
               <span className="inline-flex items-center gap-1 rounded-full bg-[var(--elevated)] px-2.5 py-1 text-[10px] font-medium text-ink shadow-sm dark:bg-[#171717] dark:text-white">
@@ -777,9 +783,112 @@ function buildFashnInputs(toolId, uploadedFiles, prompt, tryonParams) {
   }
 }
 
-const STUDIO_RESULTS_PANEL_CLASS = 'glass-card flex min-h-[640px] flex-col rounded-[1.5rem] p-4 sm:p-5'
+const STUDIO_RESULTS_PANEL_CLASS = `${STUDIO_GLASS_PANEL} flex min-h-[640px] flex-col p-4 sm:p-5`
 const STUDIO_RESULTS_VIEWPORT_CLASS =
-  'relative w-full overflow-hidden rounded-[1.4rem] border border-black/[0.06] aspect-[5/4] dark:border-white/[0.08]'
+  'relative w-full overflow-hidden rounded-[1.4rem] border border-black/[0.06] aspect-[16/9] min-h-[360px] bg-gradient-to-br from-black/[0.02] to-transparent shadow-inner sm:min-h-[420px] dark:border-white/[0.08] dark:from-white/[0.03]'
+
+function StudioToolShell({ results, settings }) {
+  return (
+    <div className="w-full px-4 py-6 sm:px-6">
+      <div className="flex flex-col gap-6">
+        {results}
+        {settings}
+      </div>
+    </div>
+  )
+}
+
+function StudioWideResultsPanel({ headerExtra, children, footer }) {
+  return (
+    <StudioResultsPanel className="w-full min-h-[520px]" headerExtra={headerExtra} footer={footer}>
+      {children}
+    </StudioResultsPanel>
+  )
+}
+
+function StudioSettingsPanel({ title = 'Ayarlar', children, footer }) {
+  return (
+    <div className={STUDIO_GLASS_PANEL}>
+      <div className="border-b border-black/[0.06] px-5 py-3.5 dark:border-white/[0.08]">
+        <div className="section-label">{title}</div>
+      </div>
+      <div className="p-4 sm:p-5">{children}</div>
+      {footer ? (
+        <div className="border-t border-black/[0.06] bg-black/[0.015] px-4 py-4 dark:border-white/[0.08] dark:bg-white/[0.02] sm:px-5">
+          <StudioGlassDivider />
+          <div className="mt-4">{footer}</div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function StudioSettingsColumns({ uploads, controls, aside }) {
+  return (
+    <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:gap-5">
+      {uploads ? (
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap xl:max-w-[440px] xl:shrink-0">
+          {uploads}
+        </div>
+      ) : null}
+      {controls ? (
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-stretch">
+            {controls}
+          </div>
+        </div>
+      ) : null}
+      {aside ? <div className="flex w-full flex-col gap-3 md:w-[240px] md:shrink-0 xl:w-[220px]">{aside}</div> : null}
+    </div>
+  )
+}
+
+function StudioControlCard({ title, help, action, children, className = '' }) {
+  return (
+    <div className={`${STUDIO_GLASS_CARD} min-w-[200px] flex-1 ${className}`.trim()}>
+      {(title || action) && (
+        <div className="mb-2.5 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5">
+            {title ? <span className="text-[10px] uppercase tracking-[0.08em] text-champagne-dim">{title}</span> : null}
+            {help ? <CircleHelp size={12} className="text-subtle" /> : null}
+          </div>
+          {action}
+        </div>
+      )}
+      {children}
+    </div>
+  )
+}
+
+function StudioGenerateBar({
+  qualityLabel,
+  creditCost,
+  credits,
+  onGenerate,
+  isGenerating,
+  jobMessage,
+  disabled = false,
+  buttonText,
+}) {
+  const lowBalance = typeof creditCost === 'number' && credits < creditCost
+
+  return (
+    <>
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <StudioCreditSummary
+          qualityLabel={qualityLabel}
+          creditCost={creditCost}
+          credits={credits}
+          lowBalance={lowBalance}
+        />
+        <StudioGenerateButton onClick={onGenerate} disabled={disabled} isGenerating={isGenerating}>
+          {buttonText ?? `${creditCost} kredi · Oluştur`}
+        </StudioGenerateButton>
+      </div>
+      {jobMessage ? <p className="mt-2 text-[11px] text-muted">{jobMessage}</p> : null}
+    </>
+  )
+}
 
 function StudioResultsPanel({ headerExtra, children, footer, className = '' }) {
   return (
@@ -798,10 +907,10 @@ function StudioResultsViewport({ children, className = '' }) {
   return <div className={`${STUDIO_RESULTS_VIEWPORT_CLASS} ${className}`.trim()}>{children}</div>
 }
 
-function ResultImages({ images, isGenerating, tool }) {
+function ResultImages({ images, isGenerating, tool, viewportClassName = '' }) {
   if (isGenerating) {
     return (
-      <StudioResultsViewport className="flex items-center justify-center">
+      <StudioResultsViewport className={`flex items-center justify-center ${viewportClassName}`.trim()}>
         <div className="flex flex-col items-center gap-3 text-muted">
           <Loader size={28} className="animate-spin text-champagne" />
           <p className="text-[12px] tracking-tight">Üretiliyor...</p>
@@ -812,7 +921,7 @@ function ResultImages({ images, isGenerating, tool }) {
 
   if (images && images.length > 0) {
     return (
-      <StudioResultsViewport>
+      <StudioResultsViewport className={viewportClassName}>
         <div className={`grid h-full w-full ${images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
           {images.map((url, i) => (
             <div key={url} className="group relative h-full min-h-0 overflow-hidden">
@@ -827,7 +936,7 @@ function ResultImages({ images, isGenerating, tool }) {
                       const blobUrl = URL.createObjectURL(blob)
                       const a = document.createElement('a')
                       a.href = blobUrl
-                      a.download = `nuladesign-${tool.id}-${i + 1}.jpg`
+                      a.download = `${SITE_DOWNLOAD_PREFIX}-${tool.id}-${i + 1}.jpg`
                       document.body.appendChild(a)
                       a.click()
                       document.body.removeChild(a)
@@ -858,15 +967,15 @@ function ResultImages({ images, isGenerating, tool }) {
   return null
 }
 
-function ResultPreview({ tool, config, isGenerating, resultImages }) {
+function ResultPreview({ tool, config, isGenerating, resultImages, viewportClassName = '' }) {
   const ToolIcon = tool.icon
 
   if (isGenerating || (resultImages && resultImages.length > 0)) {
-    return <ResultImages images={resultImages} isGenerating={isGenerating} tool={tool} />
+    return <ResultImages images={resultImages} isGenerating={isGenerating} tool={tool} viewportClassName={viewportClassName} />
   }
 
   return (
-    <StudioResultsViewport>
+    <StudioResultsViewport className={viewportClassName}>
       <div
         className="absolute inset-0"
         style={{
@@ -900,128 +1009,110 @@ function ResultPreview({ tool, config, isGenerating, resultImages }) {
   )
 }
 
-function FastSectionCard({ section }) {
+function FastSectionCard({ section, horizontal = true }) {
   return (
-    <div className="rounded-[1.35rem] border border-black/[0.05] bg-[var(--elevated)]/65 p-4 backdrop-blur dark:border-white/[0.06] dark:bg-white/[0.02]">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10px] uppercase tracking-[0.08em] text-muted">{section.title}</span>
-          {section.help && <CircleHelp size={13} className="text-subtle" />}
-        </div>
-        {section.shuffleLabel && (
+    <StudioControlCard
+      title={section.title}
+      help={section.help}
+      action={
+        section.shuffleLabel ? (
           <button
             type="button"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-black/[0.05] bg-[var(--card-bg)] text-muted transition-colors hover:text-ink dark:border-white/[0.08] dark:hover:text-white"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-black/[0.05] bg-[var(--card-bg)] text-muted transition-colors hover:text-ink dark:border-white/[0.08] dark:hover:text-white"
             title={section.shuffleLabel}
           >
-            <Shuffle size={13} />
+            <Shuffle size={12} />
           </button>
-        )}
-      </div>
-
-      <div className={`grid gap-2 ${getColumnClass(section.columns)}`}>
+        ) : null
+      }
+    >
+      <div className={`grid gap-2 ${horizontal ? 'grid-cols-2 xl:grid-cols-4' : getColumnClass(section.columns)}`}>
         {section.fields.map((field) => (
           <div
             key={field.label}
-            className="rounded-xl border border-black/[0.05] bg-[var(--card-bg)] px-3 py-2 dark:border-white/[0.06]"
+            className="rounded-xl border border-black/[0.05] bg-[var(--card-bg)]/80 px-3 py-2 transition-all duration-200 hover:border-champagne/25 hover:bg-[var(--card-bg)] dark:border-white/[0.06] dark:hover:border-[#e8dcc8]/20"
           >
             <p className="text-[10px] tracking-[-0.01em] text-muted">{field.label}</p>
             <div className="mt-1 flex items-center justify-between gap-2">
-              <span className="text-[12px] font-medium tracking-[-0.01em] text-ink dark:text-white">{field.value}</span>
-              <ChevronDown size={13} className="text-subtle" />
+              <span className="truncate text-[12px] font-medium tracking-[-0.01em] text-ink dark:text-white">{field.value}</span>
+              <ChevronDown size={13} className="shrink-0 text-subtle" />
             </div>
           </div>
         ))}
       </div>
-    </div>
+    </StudioControlCard>
   )
 }
 
 function FastExpressWorkspace({ tool, config, credits, creditCost, onGenerate, isGenerating, jobMessage, uploadedFiles, onFileChange, resultImages, promptText, onPromptChange }) {
-  const isEditorial = tool.id === 'cekim-editorial'
   const isVideo = tool.id === 'cekim-video'
-  const flowSteps = isEditorial
-    ? ['Ürünü yükle', 'Sahne ve stil seç', 'Tek kare sonucu al']
-    : isVideo
-      ? ['Kaynak görseli yükle', 'Motion ve tempo seç', 'Kısa video çıktısı al']
+  const flowSteps = isVideo
+    ? ['Kaynak görseli yükle', 'Motion ve tempo seç', 'Kısa video çıktısı al']
+    : tool.id === 'cekim-editorial'
+      ? ['Ürünü yükle', 'Sahne ve stil seç', 'Tek kare sonucu al']
       : ['Referans modeli ekle', 'Poz ve kadraj seç', 'Lookbook karesini üret']
 
+  const settingsPanel = (
+    <StudioSettingsPanel
+      footer={(
+        <StudioGenerateBar
+          qualityLabel={config.quality}
+          creditCost={creditCost}
+          credits={credits}
+          onGenerate={onGenerate}
+          isGenerating={isGenerating}
+          jobMessage={jobMessage}
+        />
+      )}
+    >
+      <StudioSettingsColumns
+        uploads={config.uploads.map((item) => (
+          <UploadCard
+            key={item.label}
+            compact
+            item={item}
+            toolLabel={tool.label}
+            preview={uploadedFiles?.[item.label]}
+            onFileChange={onFileChange}
+          />
+        ))}
+        controls={config.sections.map((section) => (
+          <FastSectionCard key={section.id} section={section} />
+        ))}
+        aside={(
+          <>
+            <StudioControlCard title="Prompt">
+              <textarea
+                value={promptText}
+                onChange={(e) => onPromptChange?.(e.target.value)}
+                placeholder="Stil yönlendirmesi yazın..."
+                rows={4}
+                className="w-full resize-none rounded-xl border border-black/[0.06] bg-[var(--card-bg)] px-3 py-2.5 text-[12px] text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-black/10 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white dark:focus:ring-white/10"
+              />
+            </StudioControlCard>
+            <StudioControlCard title="Hızlı Akış">
+              <div className="flex flex-wrap gap-2">
+                {flowSteps.map((item, index) => (
+                  <span
+                    key={item}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-champagne/15 bg-[var(--card-bg)]/80 px-2.5 py-1 text-[10px] text-muted backdrop-blur-sm dark:border-[#e8dcc8]/15"
+                  >
+                    <span className="font-medium text-champagne">{index + 1}</span>
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </StudioControlCard>
+          </>
+        )}
+      />
+    </StudioSettingsPanel>
+  )
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-      <div className="mb-6">
-        <h1 className="text-[18px] font-medium tracking-[-0.02em] text-ink dark:text-white">{config.title}</h1>
-        <p className="mt-1 text-[12px] tracking-[-0.01em] text-muted">{config.subtitle}</p>
-      </div>
-
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[360px_1fr]">
-        <div className="glass-card overflow-hidden rounded-[1.5rem]">
-          <div className="flex h-full flex-col">
-            <div className="space-y-4 p-4">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                {config.uploads.map((item) => (
-                  <UploadCard key={item.label} item={item} toolLabel={tool.label} preview={uploadedFiles?.[item.label]} onFileChange={onFileChange} />
-                ))}
-              </div>
-
-              <div className="space-y-3">
-                {config.sections.map((section) => (
-                  <FastSectionCard key={section.id} section={section} />
-                ))}
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-[10px] uppercase tracking-[0.05em] text-muted">Prompt</label>
-                <textarea
-                  value={promptText}
-                  onChange={(e) => onPromptChange?.(e.target.value)}
-                  placeholder="Stil yönlendirmesi yazın..."
-                  rows={3}
-                  className="w-full resize-none rounded-xl border border-black/[0.06] bg-[var(--card-bg)] px-3 py-2.5 text-[12px] text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-black/10 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white dark:focus:ring-white/10"
-                />
-              </div>
-
-              <div className="rounded-2xl border border-black/[0.05] bg-[var(--card-bg)] p-3 dark:border-white/[0.06]">
-                <p className="text-[10px] uppercase tracking-[0.08em] text-champagne-dim">Hızlı Akış</p>
-                <div className="mt-2 space-y-2">
-                  {flowSteps.map((item) => (
-                    <div
-                      key={item}
-                      className="rounded-xl border border-black/[0.05] bg-[var(--elevated)]/70 px-3 py-2 text-[11px] text-muted dark:border-white/[0.06] dark:bg-white/[0.02]"
-                    >
-                      {item}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="border-t border-black/[0.06] p-4 dark:border-white/[0.08]">
-              <div className="mb-3 rounded-xl bg-black/[0.03] px-3 py-2.5 dark:bg-white/[0.04]">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-muted">{config.quality}</span>
-                  <span className="font-semibold text-ink dark:text-white">{creditCost} kredi</span>
-                </div>
-                <div className="mt-1.5 h-px bg-black/[0.06] dark:bg-white/[0.08]" />
-                <div className="mt-1.5 flex items-center justify-between text-[10px]">
-                  <span className="text-muted">Mevcut bakiye</span>
-                  <span className="text-muted">{credits} kredi</span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={onGenerate}
-                disabled={isGenerating}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-black/[0.08] bg-black/90 px-4 py-3 text-[12px] font-medium uppercase tracking-[0.02em] text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[0.08] dark:bg-white dark:text-black"
-              >
-                {isGenerating ? <><Loader size={14} className="animate-spin" />Oluşturuluyor...</> : <>{creditCost} kredi · Oluştur <ArrowRight size={14} /></>}
-              </button>
-              {jobMessage ? <p className="mt-2 text-[11px] text-muted">{jobMessage}</p> : null}
-            </div>
-          </div>
-        </div>
-
-        <StudioResultsPanel
+    <StudioToolShell
+      results={(
+        <StudioWideResultsPanel
           headerExtra={
             resultImages.length > 0 ? (
               <Link to="/gallery" className="text-xs tracking-tight text-muted transition-colors hover:text-ink dark:hover:text-white">
@@ -1031,9 +1122,10 @@ function FastExpressWorkspace({ tool, config, credits, creditCost, onGenerate, i
           }
         >
           <ResultPreview tool={tool} config={config} isGenerating={isGenerating} resultImages={resultImages} />
-        </StudioResultsPanel>
-      </div>
-    </div>
+        </StudioWideResultsPanel>
+      )}
+      settings={settingsPanel}
+    />
   )
 }
 
@@ -1074,189 +1166,11 @@ function ModelResultPreview({ tool, config, isGenerating, resultImages }) {
 }
 
 function ProModelWorkspace({ tool, config, credits, creditCost, onGenerate, isGenerating, jobMessage, uploadedFiles, onFileChange, resultImages, promptText, onPromptChange }) {
-  const [settingsOpen, setSettingsOpen] = useState(true)
-  const [guideOpen, setGuideOpen] = useState(false)
-  const [openSections, setOpenSections] = useState({})
-
-  useEffect(() => {
-    setSettingsOpen(true)
-    setGuideOpen(false)
-    setOpenSections(Object.fromEntries((config.sections ?? []).map((section) => [section.id, true])))
-  }, [config, tool.id])
-
-  const toggleSection = (sectionId) => {
-    setOpenSections((current) => ({ ...current, [sectionId]: !current[sectionId] }))
-  }
-
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-      <div className="mb-6">
-        <h1 className="text-[18px] font-medium tracking-[-0.02em] text-ink dark:text-white">{config.title}</h1>
-        <p className="mt-1 text-[12px] tracking-[-0.01em] text-muted">{config.subtitle}</p>
-      </div>
-
-      <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[360px_1fr]">
-        <div className="overflow-hidden rounded-xl border border-black/[0.06] bg-[linear-gradient(180deg,rgba(255,255,255,0.72),rgba(255,255,255,0.5))] shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-          <button
-            type="button"
-            onClick={() => setSettingsOpen((current) => !current)}
-            className="flex w-full items-center justify-between border-b border-black/[0.05] px-4 py-3 lg:hidden dark:border-white/[0.04]"
-          >
-            <span className="text-[13px] font-medium tracking-[-0.01em] text-ink dark:text-white">Ayarlar</span>
-            <ChevronLeft size={16} className={`text-muted transition-transform ${settingsOpen ? 'rotate-90' : '-rotate-90'}`} />
-          </button>
-
-          <div className={`${settingsOpen ? 'block' : 'hidden'} lg:block`}>
-            <div className="flex h-full flex-col">
-              <div className="flex-1 space-y-4 p-4">
-                <div className="overflow-hidden rounded-xl border border-red-500/20 bg-[linear-gradient(90deg,rgba(220,38,38,0.16),rgba(220,38,38,0.06))]">
-                  <button
-                    type="button"
-                    onClick={() => setGuideOpen((current) => !current)}
-                    className="flex w-full items-center justify-between px-3 py-2.5 text-left"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-600 text-white shadow-[0_10px_28px_rgba(220,38,38,0.3)]">
-                        <Play size={14} className="ml-0.5 fill-current" />
-                      </div>
-                      <p className="text-[14px] font-medium tracking-tight text-ink dark:text-white">Nasıl Kullanılır?</p>
-                    </div>
-                    <ChevronDown size={16} className={`text-muted transition-transform ${guideOpen ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {guideOpen && (
-                    <div className="space-y-2 border-t border-red-500/15 px-3 pb-3 pt-2">
-                      {[
-                        'Ürün görselini yükleyin.',
-                        'Kimlik ve görünüm ayarlarını seçin.',
-                        'Kredi hazır olduğunda model üretimini başlatın.',
-                      ].map((step) => (
-                        <div key={step} className="rounded-xl bg-black/[0.03] px-3 py-2 text-[11px] text-muted dark:bg-white/[0.03]">
-                          {step}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {config.uploads.map((item) => (
-                  <UploadCard
-                    key={item.label}
-                    item={item}
-                    toolLabel={tool.label}
-                    preview={uploadedFiles?.[item.label]}
-                    onFileChange={onFileChange}
-                  />
-                ))}
-
-                <div>
-                  <label className="mb-1.5 block text-[10px] uppercase tracking-[0.05em] text-muted">Prompt</label>
-                  <textarea
-                    value={promptText}
-                    onChange={(e) => onPromptChange?.(e.target.value)}
-                    placeholder="Stil yönlendirmesi yazın..."
-                    rows={3}
-                    className="w-full resize-none rounded-xl border border-black/[0.06] bg-[var(--card-bg)] px-3 py-2.5 text-[12px] text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-black/10 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white dark:focus:ring-white/10"
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  {config.sections.map((section) => (
-                    <SectionBlock
-                      key={section.id}
-                      section={section}
-                      open={Boolean(openSections[section.id])}
-                      onToggle={() => toggleSection(section.id)}
-                    />
-                  ))}
-                </div>
-
-                <div className="space-y-3 border-t border-black/[0.06] pt-3 dark:border-white/[0.08]">
-                  <div>
-                    <label className="mb-2 block text-xs tracking-tight text-ink dark:text-white">Kamera Çerçevesi</label>
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {config.cameraFrames.map((frame, index) => (
-                        <button
-                          key={frame}
-                          type="button"
-                          className={`rounded-lg border px-2 py-2 text-xs font-medium tracking-tight transition-colors ${
-                            index === 0
-                              ? 'border-black/15 bg-black/[0.05] text-ink dark:border-white/20 dark:bg-white/[0.08] dark:text-white'
-                              : 'border-black/[0.06] text-muted hover:text-ink dark:border-white/[0.08] dark:hover:text-white'
-                          }`}
-                        >
-                          {frame}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="border-t border-black/[0.06] pt-3 dark:border-white/[0.08]">
-                    <label className="mb-1.5 block text-[9px] uppercase tracking-[0.1em] text-muted">Kalite Modu</label>
-                    <button
-                      type="button"
-                      className="flex w-full items-center justify-between rounded-lg border border-black/[0.06] bg-[var(--card-bg)] px-3 py-2.5 transition-colors hover:bg-[var(--card-bg-hover)] dark:border-white/[0.08]"
-                    >
-                      <span className="text-sm font-medium tracking-tight text-ink dark:text-white">{config.quality}</span>
-                      <ChevronDown size={14} className="text-muted" />
-                    </button>
-                  </div>
-
-                  <div className="border-t border-black/[0.06] pt-3 dark:border-white/[0.08]">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs tracking-tight text-ink dark:text-white">Kredi Maliyeti</span>
-                      <span className="text-xs font-medium tracking-tight text-ink dark:text-white">{creditCost} kredi</span>
-                    </div>
-                    <p className="mt-1 text-[10px] tracking-tight text-muted">Mevcut: {credits}</p>
-                  </div>
-
-                  <div className="rounded-xl border border-black/[0.05] px-3 dark:border-white/[0.06]">
-                    <button type="button" className="flex w-full items-center justify-between py-3">
-                      <div className="flex items-center gap-2">
-                        <Settings2 size={14} className="text-muted" />
-                        <span className="text-[10px] uppercase tracking-[0.05em] text-muted">Ek Ayarlar</span>
-                      </div>
-                      <ChevronDown size={16} className="text-muted" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t border-black/[0.06] p-4 dark:border-white/[0.08]">
-                <button
-                  type="button"
-                  onClick={onGenerate}
-                  disabled={isGenerating}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-black/[0.08] bg-black/90 px-4 py-3 text-[12px] font-medium uppercase tracking-[0.02em] text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[0.08] dark:bg-black dark:text-white"
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader size={14} className="animate-spin" />
-                      Oluşturuluyor...
-                    </>
-                  ) : (
-                    <>
-                      Oluştur
-                      <ArrowRight size={14} />
-                    </>
-                  )}
-                </button>
-                {jobMessage ? <p className="mt-2 text-[11px] text-muted">{jobMessage}</p> : null}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex min-h-[640px] flex-col overflow-hidden rounded-xl border border-black/[0.06] bg-[linear-gradient(180deg,rgba(255,255,255,0.62),rgba(255,255,255,0.46))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.32)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:p-5">
-          <div className="mb-4 flex shrink-0 items-center justify-between">
-            <h3 className="text-[13px] font-medium tracking-[-0.01em] text-muted">Sonuçlar</h3>
-          </div>
-
-          <div className="min-h-0 flex-1">
-            <ModelResultPreview tool={tool} config={config} isGenerating={isGenerating} resultImages={resultImages} />
-          </div>
-
-          <div className="mt-4 shrink-0">
+    <StudioToolShell
+      results={(
+        <StudioWideResultsPanel
+          footer={(
             <div className="rounded-[1.35rem] border border-black/[0.05] bg-[var(--card-bg)] p-4 dark:border-white/[0.06]">
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -1271,7 +1185,7 @@ function ProModelWorkspace({ tool, config, credits, creditCost, onGenerate, isGe
               {resultImages.length > 0 ? (
                 <div className="grid grid-cols-3 gap-2">
                   {resultImages.slice(0, 3).map((url, i) => (
-                    <div key={url} className="aspect-[5/4] overflow-hidden rounded-xl">
+                    <div key={url} className="aspect-[16/9] overflow-hidden rounded-xl">
                       <img src={url} alt={`Sonuç ${i + 1}`} className="h-full w-full object-cover" />
                     </div>
                   ))}
@@ -1282,10 +1196,76 @@ function ProModelWorkspace({ tool, config, credits, creditCost, onGenerate, isGe
                 </div>
               )}
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          )}
+        >
+          <ModelResultPreview tool={tool} config={config} isGenerating={isGenerating} resultImages={resultImages} />
+        </StudioWideResultsPanel>
+      )}
+      settings={(
+        <StudioSettingsPanel
+          footer={(
+            <StudioGenerateBar
+              qualityLabel={config.quality}
+              creditCost={creditCost}
+              credits={credits}
+              onGenerate={onGenerate}
+              isGenerating={isGenerating}
+              jobMessage={jobMessage}
+            />
+          )}
+        >
+          <StudioSettingsColumns
+            uploads={config.uploads.map((item) => (
+              <UploadCard key={item.label} compact item={item} toolLabel={tool.label} preview={uploadedFiles?.[item.label]} onFileChange={onFileChange} />
+            ))}
+            controls={(
+              <>
+                {config.sections.map((section) => (
+                  <FastSectionCard key={section.id} section={section} />
+                ))}
+                <StudioControlCard title="Kamera Çerçevesi" className="flex-1">
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {config.cameraFrames.map((frame, index) => (
+                      <button
+                        key={frame}
+                        type="button"
+                        className={`rounded-lg border px-2 py-2 text-xs font-medium tracking-tight transition-colors ${
+                          index === 0
+                            ? 'border-black/15 bg-black/[0.05] text-ink dark:border-white/20 dark:bg-white/[0.08] dark:text-white'
+                            : 'border-black/[0.06] text-muted hover:text-ink dark:border-white/[0.08] dark:hover:text-white'
+                        }`}
+                      >
+                        {frame}
+                      </button>
+                    ))}
+                  </div>
+                </StudioControlCard>
+                <StudioControlCard title="Kalite Modu" className="md:max-w-[200px]">
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between rounded-xl border border-black/[0.06] bg-[var(--card-bg)] px-3 py-2.5 transition-colors hover:bg-[var(--card-bg-hover)] dark:border-white/[0.08]"
+                  >
+                    <span className="text-sm font-medium tracking-tight text-ink dark:text-white">{config.quality}</span>
+                    <ChevronDown size={14} className="text-muted" />
+                  </button>
+                </StudioControlCard>
+              </>
+            )}
+            aside={(
+              <StudioControlCard title="Prompt">
+                <textarea
+                  value={promptText}
+                  onChange={(e) => onPromptChange?.(e.target.value)}
+                  placeholder="Stil yönlendirmesi yazın..."
+                  rows={5}
+                  className="w-full resize-none rounded-xl border border-black/[0.06] bg-[var(--card-bg)] px-3 py-2.5 text-[12px] text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-black/10 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white dark:focus:ring-white/10"
+                />
+              </StudioControlCard>
+            )}
+          />
+        </StudioSettingsPanel>
+      )}
+    />
   )
 }
 
@@ -1326,14 +1306,14 @@ function ParamSelect({ label, hint, value, onChange, options }) {
   return (
     <div>
       <div className="mb-1 flex items-center gap-1">
-        <label className="text-[10px] uppercase tracking-[0.05em] text-muted">{label}</label>
+        <label className="text-[10px] uppercase tracking-[0.05em] text-champagne-dim">{label}</label>
         {hint && <CircleHelp size={11} className="text-subtle" />}
       </div>
       <div className="relative">
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full appearance-none rounded-xl border border-black/[0.06] bg-[var(--card-bg)] px-3 py-2 pr-8 text-[12px] text-ink focus:outline-none focus:ring-1 focus:ring-black/10 dark:border-white/[0.08] dark:bg-[#1c1c1e] dark:text-white dark:focus:ring-white/10 dark:[color-scheme:dark]"
+          className="w-full appearance-none rounded-xl border border-black/[0.06] bg-[var(--card-bg)]/90 px-3 py-2 pr-8 text-[12px] text-ink shadow-sm transition-all focus:border-champagne/35 focus:outline-none focus:ring-2 focus:ring-champagne/15 dark:border-white/[0.08] dark:bg-[#1c1c1e] dark:text-white dark:focus:border-[#e8dcc8]/35 dark:focus:ring-[#e8dcc8]/15 dark:[color-scheme:dark]"
         >
           {options.map(([val, lbl]) => (
             <option key={val} value={val}>{lbl}</option>
@@ -1376,175 +1356,9 @@ function ProTryonWorkspace({ tool, credits, onGenerate, isGenerating, jobMessage
   const priceFor = (quality) => pricingQualities.find((q) => q.quality === quality)?.creditCost
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-      <div className="mb-6">
-        <h1 className="text-[18px] font-medium tracking-[-0.02em] text-ink dark:text-white">Try-On Max</h1>
-        <p className="mt-1 text-[12px] tracking-[-0.01em] text-muted">FASHN tryon-max · Ürün + model görseli yükle, çözünürlük ve kaliteyi seç</p>
-      </div>
-
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[360px_1fr]">
-        {/* ── LEFT PANEL ── */}
-        <div className="glass-card overflow-hidden rounded-[1.5rem]">
-          <div className="flex h-full flex-col">
-            <div className="space-y-4 p-4">
-
-              {/* uploads */}
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                {[
-                  { label: 'Ürün Görseli', action: 'Kıyafet / aksesuar yükle', badge: 'ÜRÜN' },
-                  { label: 'Model Görseli', action: 'Manken fotoğrafı yükle', badge: 'MODEL' },
-                ].map((item) => (
-                  <UploadCard key={item.label} item={item} toolLabel={tool.label} preview={uploadedFiles?.[item.label]} onFileChange={onFileChange} />
-                ))}
-              </div>
-
-              {/* prompt */}
-              <div>
-                <label className="mb-1.5 block text-[10px] uppercase tracking-[0.05em] text-muted">Stil Yönlendirmesi</label>
-                <textarea
-                  value={tryonParams.prompt}
-                  onChange={(e) => set('prompt')(e.target.value)}
-                  placeholder='ör. "tuck in shirt", "roll up sleeves", "open jacket"'
-                  rows={2}
-                  className="w-full resize-none rounded-xl border border-black/[0.06] bg-[var(--card-bg)] px-3 py-2.5 text-[12px] text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-black/10 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white dark:focus:ring-white/10"
-                />
-              </div>
-
-              {/* ── Çözünürlük & Kalite ── */}
-              <div className="rounded-2xl border border-black/[0.05] p-3 dark:border-white/[0.06]">
-                <p className="mb-3 text-[10px] uppercase tracking-[0.08em] text-muted">Çözünürlük & Kalite</p>
-
-                {/* resolution grid */}
-                <div className="mb-3">
-                  <label className="mb-1.5 block text-[10px] uppercase tracking-[0.05em] text-muted">Çözünürlük</label>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {RESOLUTION_OPTIONS.map(({ val, label, sub }) => {
-                      const unitCost = priceFor(val)
-                      return (
-                      <button
-                        key={val}
-                        type="button"
-                        onClick={() => set('resolution')(val)}
-                        className={`flex flex-col items-center rounded-xl border px-2 py-2.5 text-center transition-colors ${
-                          tryonParams.resolution === val
-                            ? 'border-black/20 bg-black/[0.06] text-ink dark:border-white/25 dark:bg-white/[0.1] dark:text-white'
-                            : 'border-black/[0.06] text-muted hover:text-ink dark:border-white/[0.08] dark:hover:text-white'
-                        }`}
-                      >
-                        <span className="text-[13px] font-semibold tracking-tight">{label}</span>
-                        <span className={`mt-0.5 text-[10px] font-semibold ${unitCost != null ? 'text-champagne' : 'opacity-40'}`}>
-                          {unitCost != null ? `${unitCost} kr` : '…'}
-                        </span>
-                        <span className="mt-0.5 text-[9px] opacity-60">{sub}</span>
-                      </button>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                {/* generation_mode */}
-                <div>
-                  <label className="mb-1.5 block text-[10px] uppercase tracking-[0.05em] text-muted">İşlem Kalitesi</label>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {[
-                      { val: 'balanced', label: 'Dengeli', sub: 'Hız + kalite' },
-                      { val: 'quality',  label: 'Kaliteli', sub: 'En iyi sonuç' },
-                    ].map(({ val, label, sub }) => (
-                      <button
-                        key={val}
-                        type="button"
-                        onClick={() => set('generation_mode')(val)}
-                        className={`flex flex-col items-center rounded-xl border px-2 py-2.5 text-center transition-colors ${
-                          tryonParams.generation_mode === val
-                            ? 'border-black/20 bg-black/[0.06] text-ink dark:border-white/25 dark:bg-white/[0.1] dark:text-white'
-                            : 'border-black/[0.06] text-muted hover:text-ink dark:border-white/[0.08] dark:hover:text-white'
-                        }`}
-                      >
-                        <span className="text-[12px] font-medium tracking-tight">{label}</span>
-                        <span className="mt-0.5 text-[9px] opacity-60">{sub}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* ── Çıktı Ayarları ── */}
-              <div className="rounded-2xl border border-black/[0.05] p-3 dark:border-white/[0.06]">
-                <p className="mb-3 text-[10px] uppercase tracking-[0.08em] text-muted">Çıktı</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <ParamSelect
-                    label="Görsel Sayısı"
-                    hint
-                    value={String(tryonParams.num_images)}
-                    onChange={(v) => set('num_images')(Number(v))}
-                    options={[['1', '1 görsel'], ['2', '2 görsel'], ['3', '3 görsel'], ['4', '4 görsel']]}
-                  />
-                  <ParamSelect
-                    label="Format"
-                    value={tryonParams.output_format}
-                    onChange={set('output_format')}
-                    options={[['png', 'PNG (Yüksek)'], ['jpeg', 'JPEG (Hızlı)']]}
-                  />
-                </div>
-              </div>
-
-              {/* ── Gelişmiş ── */}
-              <div className="rounded-2xl border border-black/[0.05] p-3 dark:border-white/[0.06]">
-                <p className="mb-3 text-[10px] uppercase tracking-[0.08em] text-muted">Gelişmiş</p>
-                <div>
-                  <label className="mb-1 block text-[10px] uppercase tracking-[0.05em] text-muted">Seed (opsiyonel)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={tryonParams.seed}
-                    onChange={(e) => set('seed')(e.target.value)}
-                    placeholder="Rastgele (varsayılan: 42)"
-                    className="w-full rounded-xl border border-black/[0.06] bg-[var(--card-bg)] px-3 py-2 text-[12px] text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-black/10 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white dark:focus:ring-white/10"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* ── Generate bar ── */}
-            <div className="border-t border-black/[0.06] p-4 dark:border-white/[0.08]">
-              {/* cost breakdown */}
-              <div className="mb-3 rounded-xl bg-black/[0.03] px-3 py-2.5 dark:bg-white/[0.04]">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-muted">{tryonParams.resolution.toUpperCase()} birim fiyat</span>
-                  <span className="text-ink dark:text-white">{activeQuality?.creditCost ?? '—'} kr</span>
-                </div>
-                <div className="mt-1 flex items-center justify-between text-[11px]">
-                  <span className="text-muted">× {tryonParams.num_images} görsel</span>
-                  <span className={`font-semibold ${hasEnough ? 'text-ink dark:text-white' : 'text-red-500'}`}>
-                    = {creditCost} kredi
-                  </span>
-                </div>
-                <div className="mt-1.5 h-px bg-black/[0.06] dark:bg-white/[0.08]" />
-                <div className="mt-1.5 flex items-center justify-between text-[10px]">
-                  <span className="text-muted">Mevcut bakiye</span>
-                  <span className={hasEnough ? 'text-muted' : 'font-medium text-red-500'}>
-                    {credits} kredi {!hasEnough && '(yetersiz)'}
-                  </span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={onGenerate}
-                disabled={isGenerating || !hasEnough}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-black/[0.08] bg-black/90 px-4 py-3 text-[12px] font-medium uppercase tracking-[0.02em] text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[0.08] dark:bg-white dark:text-black"
-              >
-                {isGenerating
-                  ? <><Loader size={14} className="animate-spin" />Oluşturuluyor...</>
-                  : <>{creditCost} kredi · Oluştur <ArrowRight size={14} /></>}
-              </button>
-              {jobMessage && <p className="mt-2 text-[11px] text-muted">{jobMessage}</p>}
-            </div>
-          </div>
-        </div>
-
-        {/* ── RIGHT PANEL ── */}
-        <StudioResultsPanel
+    <StudioToolShell
+      results={(
+        <StudioWideResultsPanel
           headerExtra={
             resultImages.length > 0 ? (
               <Link to="/gallery" className="text-xs tracking-tight text-muted transition-colors hover:text-ink dark:hover:text-white">
@@ -1587,9 +1401,102 @@ function ProTryonWorkspace({ tool, credits, onGenerate, isGenerating, jobMessage
               </div>
             </StudioResultsViewport>
           )}
-        </StudioResultsPanel>
-      </div>
-    </div>
+        </StudioWideResultsPanel>
+      )}
+      settings={(
+        <StudioSettingsPanel
+          footer={(
+            <StudioGenerateBar
+              qualityLabel={`${tryonParams.resolution.toUpperCase()} · ×${tryonParams.num_images} görsel`}
+              creditCost={creditCost}
+              credits={credits}
+              onGenerate={onGenerate}
+              isGenerating={isGenerating}
+              jobMessage={jobMessage}
+              disabled={!hasEnough}
+            />
+          )}
+        >
+          <StudioSettingsColumns
+            uploads={[
+              { label: 'Ürün Görseli', action: 'Kıyafet / aksesuar yükle', badge: 'ÜRÜN' },
+              { label: 'Model Görseli', action: 'Manken fotoğrafı yükle', badge: 'MODEL' },
+            ].map((item) => (
+              <UploadCard key={item.label} compact item={item} toolLabel={tool.label} preview={uploadedFiles?.[item.label]} onFileChange={onFileChange} />
+            ))}
+            controls={(
+              <>
+                <StudioControlCard title="Çözünürlük & Kalite">
+                  <StudioSegmentGrid
+                    groupId="pro-tryon-resolution"
+                    className="mb-3"
+                    value={tryonParams.resolution}
+                    onChange={set('resolution')}
+                    options={RESOLUTION_OPTIONS.map(({ val, label, sub }) => {
+                      const unitCost = priceFor(val)
+                      return {
+                        value: val,
+                        label,
+                        sub,
+                        badge: unitCost != null ? `${unitCost} kr` : '…',
+                      }
+                    })}
+                  />
+                  <StudioSegmentGrid
+                    groupId="pro-tryon-mode"
+                    columns={2}
+                    value={tryonParams.generation_mode}
+                    onChange={set('generation_mode')}
+                    options={[
+                      { value: 'balanced', label: 'Dengeli', sub: 'Hız + kalite' },
+                      { value: 'quality', label: 'Kaliteli', sub: 'En iyi sonuç' },
+                    ]}
+                  />
+                </StudioControlCard>
+                <StudioControlCard title="Çıktı">
+                  <div className="grid grid-cols-2 gap-2">
+                    <ParamSelect
+                      label="Görsel Sayısı"
+                      hint
+                      value={String(tryonParams.num_images)}
+                      onChange={(v) => set('num_images')(Number(v))}
+                      options={[['1', '1 görsel'], ['2', '2 görsel'], ['3', '3 görsel'], ['4', '4 görsel']]}
+                    />
+                    <ParamSelect
+                      label="Format"
+                      value={tryonParams.output_format}
+                      onChange={set('output_format')}
+                      options={[['png', 'PNG (Yüksek)'], ['jpeg', 'JPEG (Hızlı)']]}
+                    />
+                  </div>
+                </StudioControlCard>
+                <StudioControlCard title="Gelişmiş" className="md:max-w-[220px]">
+                  <input
+                    type="number"
+                    min="0"
+                    value={tryonParams.seed}
+                    onChange={(e) => set('seed')(e.target.value)}
+                    placeholder="Seed (opsiyonel)"
+                    className="w-full rounded-xl border border-black/[0.06] bg-[var(--card-bg)] px-3 py-2 text-[12px] text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-black/10 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white dark:focus:ring-white/10"
+                  />
+                </StudioControlCard>
+              </>
+            )}
+            aside={(
+              <StudioControlCard title="Stil Yönlendirmesi">
+                <textarea
+                  value={tryonParams.prompt}
+                  onChange={(e) => set('prompt')(e.target.value)}
+                  placeholder='ör. "tuck in shirt", "roll up sleeves"'
+                  rows={5}
+                  className="w-full resize-none rounded-xl border border-black/[0.06] bg-[var(--card-bg)] px-3 py-2.5 text-[12px] text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-black/10 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white dark:focus:ring-white/10"
+                />
+              </StudioControlCard>
+            )}
+          />
+        </StudioSettingsPanel>
+      )}
+    />
   )
 }
 
@@ -1600,77 +1507,9 @@ function DecoupeWorkspace({ tool, credits, onGenerate, isGenerating, jobMessage,
   const priceFor = (quality) => pricingQualities.find((q) => q.quality === quality)?.creditCost
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-      <div className="mb-6">
-        <h1 className="text-[18px] font-medium tracking-[-0.02em] text-ink dark:text-white">Decoupe · Packshot</h1>
-        <p className="mt-1 text-[12px] tracking-[-0.01em] text-muted">FASHN packshot · Ürün fotoğrafını temiz katalog görseline dönüştür</p>
-      </div>
-
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[360px_1fr]">
-        <div className="glass-card overflow-hidden rounded-[1.5rem]">
-          <div className="flex h-full flex-col">
-            <div className="space-y-4 p-4">
-              <UploadCard
-                item={{ label: 'Ürün', action: 'Ürün / on-model fotoğrafı yükle', badge: 'PDP' }}
-                toolLabel={tool.label}
-                preview={uploadedFiles?.['Ürün']}
-                onFileChange={onFileChange}
-              />
-
-              <div className="rounded-2xl border border-black/[0.05] p-3 dark:border-white/[0.06]">
-                <p className="mb-3 text-[10px] uppercase tracking-[0.08em] text-muted">Çözünürlük</p>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {RESOLUTION_OPTIONS.map(({ val, label, sub }) => {
-                    const unitCost = priceFor(val)
-                    return (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => set('resolution')(val)}
-                      className={`flex flex-col items-center rounded-xl border px-2 py-2.5 text-center transition-colors ${
-                        packshotParams.resolution === val
-                          ? 'border-black/20 bg-black/[0.06] text-ink dark:border-white/25 dark:bg-white/[0.1] dark:text-white'
-                          : 'border-black/[0.06] text-muted hover:text-ink dark:border-white/[0.08] dark:hover:text-white'
-                      }`}
-                    >
-                      <span className="text-[13px] font-semibold tracking-tight">{label}</span>
-                      <span className={`mt-0.5 text-[10px] font-semibold ${unitCost != null ? 'text-champagne' : 'opacity-40'}`}>
-                        {unitCost != null ? `${unitCost} kr` : '…'}
-                      </span>
-                      <span className="mt-0.5 text-[9px] opacity-60">{sub}</span>
-                    </button>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div className="border-t border-black/[0.06] p-4 dark:border-white/[0.08]">
-              <div className="mb-3 rounded-xl bg-black/[0.03] px-3 py-2.5 dark:bg-white/[0.04]">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-muted">{packshotParams.resolution.toUpperCase()}</span>
-                  <span className={`font-semibold ${hasEnough ? 'text-ink dark:text-white' : 'text-red-500'}`}>{creditCost} kredi</span>
-                </div>
-                <div className="mt-1.5 h-px bg-black/[0.06] dark:bg-white/[0.08]" />
-                <div className="mt-1.5 flex items-center justify-between text-[10px]">
-                  <span className="text-muted">Mevcut bakiye</span>
-                  <span className={hasEnough ? 'text-muted' : 'font-medium text-red-500'}>{credits} kredi {!hasEnough && '(yetersiz)'}</span>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={onGenerate}
-                disabled={isGenerating || !hasEnough}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-black/[0.08] bg-black/90 px-4 py-3 text-[12px] font-medium uppercase tracking-[0.02em] text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[0.08] dark:bg-white dark:text-black"
-              >
-                {isGenerating ? <><Loader size={14} className="animate-spin" />Oluşturuluyor...</> : <>{creditCost} kredi · Oluştur <ArrowRight size={14} /></>}
-              </button>
-              {jobMessage && <p className="mt-2 text-[11px] text-muted">{jobMessage}</p>}
-            </div>
-          </div>
-        </div>
-
-        <StudioResultsPanel
+    <StudioToolShell
+      results={(
+        <StudioWideResultsPanel
           headerExtra={
             resultImages.length > 0 ? (
               <Link to="/gallery" className="text-xs tracking-tight text-muted transition-colors hover:text-ink dark:hover:text-white">Galeride Gör</Link>
@@ -1691,9 +1530,54 @@ function DecoupeWorkspace({ tool, credits, onGenerate, isGenerating, jobMessage,
               </div>
             </StudioResultsViewport>
           )}
-        </StudioResultsPanel>
-      </div>
-    </div>
+        </StudioWideResultsPanel>
+      )}
+      settings={(
+        <StudioSettingsPanel
+          footer={(
+            <StudioGenerateBar
+              qualityLabel={packshotParams.resolution.toUpperCase()}
+              creditCost={creditCost}
+              credits={credits}
+              onGenerate={onGenerate}
+              isGenerating={isGenerating}
+              jobMessage={jobMessage}
+              disabled={!hasEnough}
+            />
+          )}
+        >
+          <StudioSettingsColumns
+            uploads={(
+              <UploadCard
+                compact
+                item={{ label: 'Ürün', action: 'Ürün / on-model fotoğrafı yükle', badge: 'PDP' }}
+                toolLabel={tool.label}
+                preview={uploadedFiles?.['Ürün']}
+                onFileChange={onFileChange}
+              />
+            )}
+            controls={(
+              <StudioControlCard title="Çözünürlük" className="flex-[2]">
+                <StudioSegmentGrid
+                  groupId="pro-decoupe-resolution"
+                  value={packshotParams.resolution}
+                  onChange={set('resolution')}
+                  options={RESOLUTION_OPTIONS.map(({ val, label, sub }) => {
+                    const unitCost = priceFor(val)
+                    return {
+                      value: val,
+                      label,
+                      sub,
+                      badge: unitCost != null ? `${unitCost} kr` : '…',
+                    }
+                  })}
+                />
+              </StudioControlCard>
+            )}
+          />
+        </StudioSettingsPanel>
+      )}
+    />
   )
 }
 
@@ -1705,111 +1589,9 @@ function SwapWorkspace({ tool, credits, onGenerate, isGenerating, jobMessage, up
   const activeQuality = pricingQualities.find((q) => q.quality === swapParams.resolution)
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-      <div className="mb-6">
-        <h1 className="text-[18px] font-medium tracking-[-0.02em] text-ink dark:text-white">Swap Studio</h1>
-        <p className="mt-1 text-[12px] tracking-[-0.01em] text-muted">FASHN model-swap · Ürün + sahne yükle, çözünürlük ve kaliteyi seç</p>
-      </div>
-
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[360px_1fr]">
-        <div className="glass-card overflow-hidden rounded-[1.5rem]">
-          <div className="flex h-full flex-col">
-            <div className="space-y-4 p-4">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                {[
-                  { label: 'Ürün Görseli', action: 'Ürün fotoğrafı yükle', badge: 'ÜRÜN' },
-                  { label: 'Sahne Görseli', action: 'Sahne / model fotoğrafı yükle', badge: 'SAHNE' },
-                ].map((item) => (
-                  <UploadCard key={item.label} item={item} toolLabel={tool.label} preview={uploadedFiles?.[item.label]} onFileChange={onFileChange} />
-                ))}
-              </div>
-
-              <div className="rounded-2xl border border-black/[0.05] p-3 dark:border-white/[0.06]">
-                <p className="mb-3 text-[10px] uppercase tracking-[0.08em] text-muted">Çözünürlük</p>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {RESOLUTION_OPTIONS.map(({ val, label, sub }) => {
-                    const unitCost = priceFor(val)
-                    return (
-                      <button
-                        key={val}
-                        type="button"
-                        onClick={() => set('resolution')(val)}
-                        className={`flex flex-col items-center rounded-xl border px-2 py-2.5 text-center transition-colors ${
-                          swapParams.resolution === val
-                            ? 'border-black/20 bg-black/[0.06] text-ink dark:border-white/25 dark:bg-white/[0.1] dark:text-white'
-                            : 'border-black/[0.06] text-muted hover:text-ink dark:border-white/[0.08] dark:hover:text-white'
-                        }`}
-                      >
-                        <span className="text-[13px] font-semibold tracking-tight">{label}</span>
-                        <span className={`mt-0.5 text-[10px] font-semibold ${unitCost != null ? 'text-champagne' : 'opacity-40'}`}>
-                          {unitCost != null ? `${unitCost} kr` : '…'}
-                        </span>
-                        <span className="mt-0.5 text-[9px] opacity-60">{sub}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-black/[0.05] p-3 dark:border-white/[0.06]">
-                <p className="mb-3 text-[10px] uppercase tracking-[0.08em] text-muted">İşlem Kalitesi</p>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {[
-                    { val: 'fast', label: 'Hızlı', sub: 'Düşük maliyet' },
-                    { val: 'balanced', label: 'Dengeli', sub: 'Hız + kalite' },
-                    { val: 'quality', label: 'Kaliteli', sub: 'En iyi sonuç' },
-                  ].map(({ val, label, sub }) => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => set('generation_mode')(val)}
-                      className={`flex flex-col items-center rounded-xl border px-2 py-2 text-center transition-colors ${
-                        swapParams.generation_mode === val
-                          ? 'border-black/20 bg-black/[0.06] text-ink dark:border-white/25 dark:bg-white/[0.1] dark:text-white'
-                          : 'border-black/[0.06] text-muted hover:text-ink dark:border-white/[0.08] dark:hover:text-white'
-                      }`}
-                    >
-                      <span className="text-[11px] font-medium tracking-tight">{label}</span>
-                      <span className="mt-0.5 text-[9px] opacity-60">{sub}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <ParamSelect
-                label="Format"
-                value={swapParams.output_format}
-                onChange={set('output_format')}
-                options={[['png', 'PNG (Yüksek)'], ['jpeg', 'JPEG (Hızlı)']]}
-              />
-            </div>
-
-            <div className="border-t border-black/[0.06] p-4 dark:border-white/[0.08]">
-              <div className="mb-3 rounded-xl bg-black/[0.03] px-3 py-2.5 dark:bg-white/[0.04]">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-muted">{swapParams.resolution.toUpperCase()} · {swapParams.generation_mode}</span>
-                  <span className="text-ink dark:text-white">{activeQuality?.creditCost ?? '—'} kr</span>
-                </div>
-                <div className="mt-1.5 h-px bg-black/[0.06] dark:bg-white/[0.08]" />
-                <div className="mt-1.5 flex items-center justify-between text-[10px]">
-                  <span className="text-muted">Mevcut bakiye</span>
-                  <span className={hasEnough ? 'text-muted' : 'font-medium text-red-500'}>{credits} kredi {!hasEnough && '(yetersiz)'}</span>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={onGenerate}
-                disabled={isGenerating || !hasEnough}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-black/[0.08] bg-black/90 px-4 py-3 text-[12px] font-medium uppercase tracking-[0.02em] text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[0.08] dark:bg-white dark:text-black"
-              >
-                {isGenerating ? <><Loader size={14} className="animate-spin" />Oluşturuluyor...</> : <>{creditCost} kredi · Oluştur <ArrowRight size={14} /></>}
-              </button>
-              {jobMessage && <p className="mt-2 text-[11px] text-muted">{jobMessage}</p>}
-            </div>
-          </div>
-        </div>
-
-        <StudioResultsPanel
+    <StudioToolShell
+      results={(
+        <StudioWideResultsPanel
           headerExtra={
             resultImages.length > 0 ? (
               <Link to="/gallery" className="text-xs tracking-tight text-muted transition-colors hover:text-ink dark:hover:text-white">Galeride Gör</Link>
@@ -1830,9 +1612,73 @@ function SwapWorkspace({ tool, credits, onGenerate, isGenerating, jobMessage, up
               </div>
             </StudioResultsViewport>
           )}
-        </StudioResultsPanel>
-      </div>
-    </div>
+        </StudioWideResultsPanel>
+      )}
+      settings={(
+        <StudioSettingsPanel
+          footer={(
+            <StudioGenerateBar
+              qualityLabel={`${swapParams.resolution.toUpperCase()} · ${swapParams.generation_mode}`}
+              creditCost={creditCost}
+              credits={credits}
+              onGenerate={onGenerate}
+              isGenerating={isGenerating}
+              jobMessage={jobMessage}
+              disabled={!hasEnough}
+            />
+          )}
+        >
+          <StudioSettingsColumns
+            uploads={[
+              { label: 'Ürün Görseli', action: 'Ürün fotoğrafı yükle', badge: 'ÜRÜN' },
+              { label: 'Sahne Görseli', action: 'Sahne / model fotoğrafı yükle', badge: 'SAHNE' },
+            ].map((item) => (
+              <UploadCard key={item.label} compact item={item} toolLabel={tool.label} preview={uploadedFiles?.[item.label]} onFileChange={onFileChange} />
+            ))}
+            controls={(
+              <>
+                <StudioControlCard title="Çözünürlük" className="flex-[1.4]">
+                  <StudioSegmentGrid
+                    groupId="pro-swap-resolution"
+                    value={swapParams.resolution}
+                    onChange={set('resolution')}
+                    options={RESOLUTION_OPTIONS.map(({ val, label, sub }) => {
+                      const unitCost = priceFor(val)
+                      return {
+                        value: val,
+                        label,
+                        sub,
+                        badge: unitCost != null ? `${unitCost} kr` : '…',
+                      }
+                    })}
+                  />
+                </StudioControlCard>
+                <StudioControlCard title="İşlem Kalitesi" className="flex-1">
+                  <StudioSegmentGrid
+                    groupId="pro-swap-mode"
+                    value={swapParams.generation_mode}
+                    onChange={set('generation_mode')}
+                    options={[
+                      { value: 'fast', label: 'Hızlı', sub: 'Düşük maliyet' },
+                      { value: 'balanced', label: 'Dengeli', sub: 'Hız + kalite' },
+                      { value: 'quality', label: 'Kaliteli', sub: 'En iyi sonuç' },
+                    ]}
+                  />
+                </StudioControlCard>
+                <StudioControlCard title="Format" className="md:max-w-[200px]">
+                  <ParamSelect
+                    label="Format"
+                    value={swapParams.output_format}
+                    onChange={set('output_format')}
+                    options={[['png', 'PNG (Yüksek)'], ['jpeg', 'JPEG (Hızlı)']]}
+                  />
+                </StudioControlCard>
+              </>
+            )}
+          />
+        </StudioSettingsPanel>
+      )}
+    />
   )
 }
 
@@ -1847,138 +1693,9 @@ function CekimModelWorkspace({ tool, credits, creditCost, onGenerate, isGenerati
   const set = (key) => (val) => onTryonChange({ ...tryonParams, [key]: val })
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-      <div className="mb-6">
-        <h1 className="text-[18px] font-medium tracking-[-0.02em] text-ink dark:text-white">Hızlı Try-On</h1>
-        <p className="mt-1 text-[12px] tracking-[-0.01em] text-muted">FASHN tryon-v1.6 · Model görseli + kıyafet yükle, ayarları seç, oluştur</p>
-      </div>
-
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[360px_1fr]">
-        {/* ── LEFT PANEL ── */}
-        <div className="glass-card overflow-hidden rounded-[1.5rem]">
-          <div className="flex h-full flex-col">
-            <div className="space-y-4 p-4">
-              {/* uploads */}
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                {config.uploads.map((item) => (
-                  <UploadCard key={item.label} item={item} toolLabel={tool.label} preview={uploadedFiles?.[item.label]} onFileChange={onFileChange} />
-                ))}
-              </div>
-
-              {/* ── Kıyafet Ayarları ── */}
-              <div className="rounded-2xl border border-black/[0.05] p-3 dark:border-white/[0.06]">
-                <p className="mb-3 text-[10px] uppercase tracking-[0.08em] text-muted">Kıyafet</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <ParamSelect
-                    label="Kategori"
-                    hint
-                    value={tryonParams.category}
-                    onChange={set('category')}
-                    options={[
-                      ['auto', 'Otomatik'],
-                      ['tops', 'Üst Giyim'],
-                      ['bottoms', 'Alt Giyim'],
-                      ['one-pieces', 'Kombinezon'],
-                    ]}
-                  />
-                  <ParamSelect
-                    label="Fotoğraf Tipi"
-                    hint
-                    value={tryonParams.garment_photo_type}
-                    onChange={set('garment_photo_type')}
-                    options={[
-                      ['auto', 'Otomatik'],
-                      ['model', 'Model Üzerinde'],
-                      ['flat-lay', 'Düz Sergi'],
-                    ]}
-                  />
-                </div>
-              </div>
-
-              {/* ── Kalite & Çıktı ── */}
-              <div className="rounded-2xl border border-black/[0.05] p-3 dark:border-white/[0.06]">
-                <p className="mb-3 text-[10px] uppercase tracking-[0.08em] text-muted">Kalite & Çıktı</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <ParamSelect
-                    label="İşlem Modu"
-                    value={tryonParams.mode}
-                    onChange={set('mode')}
-                    options={[
-                      ['performance', 'Hızlı'],
-                      ['balanced', 'Dengeli'],
-                      ['quality', 'Kaliteli'],
-                    ]}
-                  />
-                  <ParamSelect
-                    label="Örnek Sayısı"
-                    hint
-                    value={String(tryonParams.num_samples)}
-                    onChange={(v) => set('num_samples')(Number(v))}
-                    options={[['1', '1 görsel'], ['2', '2 görsel'], ['3', '3 görsel'], ['4', '4 görsel']]}
-                  />
-                  <ParamSelect
-                    label="Format"
-                    value={tryonParams.output_format}
-                    onChange={set('output_format')}
-                    options={[['png', 'PNG (Yüksek)'], ['jpeg', 'JPEG (Hızlı)']]}
-                  />
-                  <ParamSelect
-                    label="Moderasyon"
-                    value={tryonParams.moderation_level}
-                    onChange={set('moderation_level')}
-                    options={[
-                      ['permissive', 'Standart'],
-                      ['conservative', 'Muhafazakar'],
-                      ['none', 'Yok'],
-                    ]}
-                  />
-                </div>
-              </div>
-
-              {/* ── Gelişmiş ── */}
-              <div className="rounded-2xl border border-black/[0.05] p-3 dark:border-white/[0.06]">
-                <p className="mb-3 text-[10px] uppercase tracking-[0.08em] text-muted">Gelişmiş</p>
-                <div className="space-y-3">
-                  <ParamToggle
-                    label="Segmentasyonsuz mod"
-                    value={tryonParams.segmentation_free}
-                    onChange={set('segmentation_free')}
-                  />
-                  <div>
-                    <label className="mb-1 block text-[10px] uppercase tracking-[0.05em] text-muted">Seed (opsiyonel)</label>
-                    <input
-                      type="number"
-                      value={tryonParams.seed}
-                      onChange={(e) => set('seed')(e.target.value)}
-                      placeholder="Rastgele"
-                      className="w-full rounded-xl border border-black/[0.06] bg-[var(--card-bg)] px-3 py-2 text-[12px] text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-black/10 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white dark:focus:ring-white/10"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="border-t border-black/[0.06] p-4 dark:border-white/[0.08]">
-              <div className="mb-3 flex items-center justify-between text-[11px] text-muted">
-                <span>Kredi maliyeti</span>
-                <span className="font-medium text-ink dark:text-white">{creditCost} kredi</span>
-              </div>
-              <p className="mb-3 text-[10px] text-muted">Mevcut: {credits}</p>
-              <button
-                type="button"
-                onClick={onGenerate}
-                disabled={isGenerating}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-black/[0.08] bg-black/90 px-4 py-3 text-[12px] font-medium uppercase tracking-[0.02em] text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[0.08] dark:bg-white dark:text-black"
-              >
-                {isGenerating ? <><Loader size={14} className="animate-spin" />Oluşturuluyor...</> : <>Oluştur <ArrowRight size={14} /></>}
-              </button>
-              {jobMessage && <p className="mt-2 text-[11px] text-muted">{jobMessage}</p>}
-            </div>
-          </div>
-        </div>
-
-        {/* ── RIGHT PANEL ── */}
-        <StudioResultsPanel
+    <StudioToolShell
+      results={(
+        <StudioWideResultsPanel
           headerExtra={
             resultImages.length > 0 ? (
               <Link to="/gallery" className="text-xs tracking-tight text-muted transition-colors hover:text-ink dark:hover:text-white">
@@ -2019,9 +1736,115 @@ function CekimModelWorkspace({ tool, credits, creditCost, onGenerate, isGenerati
               </div>
             </StudioResultsViewport>
           )}
-        </StudioResultsPanel>
-      </div>
-    </div>
+        </StudioWideResultsPanel>
+      )}
+      settings={(
+        <StudioSettingsPanel
+          footer={(
+            <StudioGenerateBar
+              creditCost={creditCost}
+              credits={credits}
+              onGenerate={onGenerate}
+              isGenerating={isGenerating}
+              jobMessage={jobMessage}
+            />
+          )}
+        >
+          <StudioSettingsColumns
+            uploads={config.uploads.map((item) => (
+              <UploadCard key={item.label} compact item={item} toolLabel={tool.label} preview={uploadedFiles?.[item.label]} onFileChange={onFileChange} />
+            ))}
+            controls={(
+              <>
+                <StudioControlCard title="Kıyafet" className="flex-[1.2]">
+                  <div className="grid grid-cols-2 gap-2">
+                    <ParamSelect
+                      label="Kategori"
+                      hint
+                      value={tryonParams.category}
+                      onChange={set('category')}
+                      options={[
+                        ['auto', 'Otomatik'],
+                        ['tops', 'Üst Giyim'],
+                        ['bottoms', 'Alt Giyim'],
+                        ['one-pieces', 'Kombinezon'],
+                      ]}
+                    />
+                    <ParamSelect
+                      label="Fotoğraf Tipi"
+                      hint
+                      value={tryonParams.garment_photo_type}
+                      onChange={set('garment_photo_type')}
+                      options={[
+                        ['auto', 'Otomatik'],
+                        ['model', 'Model Üzerinde'],
+                        ['flat-lay', 'Düz Sergi'],
+                      ]}
+                    />
+                  </div>
+                </StudioControlCard>
+                <StudioControlCard title="Kalite & Çıktı" className="flex-[1.4]">
+                  <div className="grid grid-cols-2 gap-2">
+                    <ParamSelect
+                      label="İşlem Modu"
+                      value={tryonParams.mode}
+                      onChange={set('mode')}
+                      options={[
+                        ['performance', 'Hızlı'],
+                        ['balanced', 'Dengeli'],
+                        ['quality', 'Kaliteli'],
+                      ]}
+                    />
+                    <ParamSelect
+                      label="Örnek Sayısı"
+                      hint
+                      value={String(tryonParams.num_samples)}
+                      onChange={(v) => set('num_samples')(Number(v))}
+                      options={[['1', '1 görsel'], ['2', '2 görsel'], ['3', '3 görsel'], ['4', '4 görsel']]}
+                    />
+                    <ParamSelect
+                      label="Format"
+                      value={tryonParams.output_format}
+                      onChange={set('output_format')}
+                      options={[['png', 'PNG (Yüksek)'], ['jpeg', 'JPEG (Hızlı)']]}
+                    />
+                    <ParamSelect
+                      label="Moderasyon"
+                      value={tryonParams.moderation_level}
+                      onChange={set('moderation_level')}
+                      options={[
+                        ['permissive', 'Standart'],
+                        ['conservative', 'Muhafazakar'],
+                        ['none', 'Yok'],
+                      ]}
+                    />
+                  </div>
+                </StudioControlCard>
+                <StudioControlCard title="Gelişmiş" className="md:max-w-[240px]">
+                  <div className="space-y-3">
+                    <ParamToggle
+                      label="Segmentasyonsuz mod"
+                      value={tryonParams.segmentation_free}
+                      onChange={set('segmentation_free')}
+                    />
+                    <div>
+                      <label className="mb-1 block text-[10px] uppercase tracking-[0.05em] text-muted">Seed (opsiyonel)</label>
+                      <input
+                        type="number"
+                        value={tryonParams.seed}
+                        onChange={(e) => set('seed')(e.target.value)}
+                        placeholder="Rastgele"
+                        className="w-full rounded-xl border border-black/[0.06] bg-[var(--card-bg)] px-3 py-2 text-[12px] text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-black/10 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white dark:focus:ring-white/10"
+                      />
+                    </div>
+                  </div>
+                </StudioControlCard>
+              </>
+            )}
+          />
+        </StudioSettingsPanel>
+      )}
+    />
   )
 }
 
@@ -2086,9 +1909,6 @@ export default function StudioToolWorkspace({ tool }) {
       },
     [tool]
   )
-  const [settingsOpen, setSettingsOpen] = useState(true)
-  const [guideOpen, setGuideOpen] = useState(false)
-  const [openSections, setOpenSections] = useState({})
   const [isGenerating, setIsGenerating] = useState(false)
   const [jobMessage, setJobMessage] = useState('')
 
@@ -2113,16 +1933,6 @@ export default function StudioToolWorkspace({ tool }) {
     }
     return resolveToolCreditCost(tool.id, toolPricingMap, { quality: '2k' })
   }, [tool.id, toolPricingMap, tryonMaxParams, packshotParams, swapParams, tryonParams.num_samples])
-
-  useEffect(() => {
-    setSettingsOpen(true)
-    setGuideOpen(false)
-    setOpenSections(Object.fromEntries((config.sections ?? []).map((section) => [section.id, true])))
-  }, [config, tool.id])
-
-  const toggleSection = (sectionId) => {
-    setOpenSections((current) => ({ ...current, [sectionId]: !current[sectionId] }))
-  }
 
   const handleGenerate = async () => {
     if (!user?.id) {
@@ -2266,159 +2076,9 @@ export default function StudioToolWorkspace({ tool }) {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-      <div className="mb-6">
-        <h1 className="text-[18px] font-medium tracking-[-0.02em] text-ink dark:text-white">{config.title}</h1>
-        <p className="mt-1 text-[12px] tracking-[-0.01em] text-muted">{config.subtitle}</p>
-      </div>
-
-      <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[360px_1fr]">
-        <div className="glass-card overflow-hidden rounded-[1.5rem]">
-          <button
-            type="button"
-            onClick={() => setSettingsOpen((current) => !current)}
-            className="flex w-full items-center justify-between px-4 py-3 lg:hidden"
-          >
-            <span className="text-[13px] font-medium tracking-[-0.01em] text-ink dark:text-white">Ayarlar</span>
-            <ChevronLeft size={16} className={`text-muted transition-transform ${settingsOpen ? 'rotate-90' : '-rotate-90'}`} />
-          </button>
-
-          <div className={`${settingsOpen ? 'block' : 'hidden'} lg:block`}>
-            <div className="flex h-full flex-col">
-              <div className="space-y-4 p-4">
-                {config.showGuide !== false && (
-                  <div className="overflow-hidden rounded-2xl border border-red-500/20 bg-[linear-gradient(90deg,rgba(239,68,68,0.16),rgba(239,68,68,0.05))]">
-                    <button
-                      type="button"
-                      onClick={() => setGuideOpen((current) => !current)}
-                      className="flex w-full items-center justify-between px-3 py-3 text-left"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-600 text-white shadow-[0_12px_30px_rgba(239,68,68,0.28)]">
-                          <Play size={14} className="ml-0.5 fill-current" />
-                        </div>
-                        <p className="text-[14px] font-medium tracking-tight text-ink dark:text-white">Nasıl Kullanılır?</p>
-                      </div>
-                      <ChevronDown size={16} className={`text-muted transition-transform ${guideOpen ? 'rotate-180' : ''}`} />
-                    </button>
-
-                    {guideOpen && (
-                      <div className="space-y-2 border-t border-red-500/15 px-3 pb-3 pt-2">
-                        {[
-                          'Önce kaynak görselleri ekleyin.',
-                          'Sol panelden stil ve çıktı ayarlarını belirleyin.',
-                          'Kredi hazır olduğunda oluştur butonuyla üretimi başlatın.',
-                        ].map((step) => (
-                          <div key={step} className="rounded-xl bg-black/[0.03] px-3 py-2 text-[11px] text-muted dark:bg-white/[0.03]">
-                            {step}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {config.uploads.map((item) => (
-                  <UploadCard key={item.label} item={item} toolLabel={tool.label} preview={uploadedFiles[item.label]} onFileChange={handleFileChange} />
-                ))}
-
-                <div>
-                  <label className="mb-1.5 block text-[10px] uppercase tracking-[0.05em] text-muted">Prompt</label>
-                  <textarea
-                    value={promptText}
-                    onChange={(e) => setPromptText(e.target.value)}
-                    placeholder="Stil yönlendirmesi yazın..."
-                    rows={3}
-                    className="w-full resize-none rounded-xl border border-black/[0.06] bg-[var(--card-bg)] px-3 py-2.5 text-[12px] text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-black/10 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white dark:focus:ring-white/10"
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  {config.sections.map((section) => (
-                    <SectionBlock
-                      key={section.id}
-                      section={section}
-                      open={Boolean(openSections[section.id])}
-                      onToggle={() => toggleSection(section.id)}
-                    />
-                  ))}
-                </div>
-
-                <div className="space-y-3 border-t border-black/[0.06] pt-3 dark:border-white/[0.08]">
-                  {config.showCameraFrames !== false && (
-                    <div>
-                      <label className="mb-2 block text-xs tracking-tight text-ink dark:text-white">Kamera Çerçevesi</label>
-                      <div className="grid grid-cols-4 gap-1.5">
-                        {config.cameraFrames.map((frame, index) => (
-                          <button
-                            key={frame}
-                            type="button"
-                            className={`rounded-xl border px-2 py-2 text-xs font-medium tracking-tight transition-colors ${
-                              index === 0
-                                ? 'border-black/15 bg-black/[0.05] text-ink dark:border-white/20 dark:bg-white/[0.08] dark:text-white'
-                                : 'border-black/[0.06] text-muted hover:text-ink dark:border-white/[0.08] dark:hover:text-white'
-                            }`}
-                          >
-                            {frame}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="border-t border-black/[0.06] pt-3 dark:border-white/[0.08]">
-                    <label className="mb-1.5 block text-[9px] uppercase tracking-[0.1em] text-muted">Kalite Modu</label>
-                    <button
-                      type="button"
-                      className="flex w-full items-center justify-between rounded-xl border border-black/[0.06] bg-[var(--card-bg)] px-3 py-2.5 transition-colors hover:bg-[var(--card-bg-hover)] dark:border-white/[0.08]"
-                    >
-                      <span className="text-sm font-medium tracking-tight text-ink dark:text-white">{config.quality}</span>
-                      <ChevronDown size={14} className="text-muted" />
-                    </button>
-                  </div>
-
-                  <div className="border-t border-black/[0.06] pt-3 dark:border-white/[0.08]">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs tracking-tight text-ink dark:text-white">Kredi Maliyeti</span>
-                      <span className="text-xs font-medium tracking-tight text-ink dark:text-white">{creditCost} kredi</span>
-                    </div>
-                    <p className="mt-1 text-[10px] tracking-tight text-muted">Mevcut: {credits}</p>
-                  </div>
-
-                  {config.showAdditionalSettings !== false && (
-                    <div className="rounded-2xl border border-black/[0.05] px-3 dark:border-white/[0.06]">
-                      <button type="button" className="flex w-full items-center justify-between py-3">
-                        <div className="flex items-center gap-2">
-                          <Settings2 size={14} className="text-muted" />
-                          <span className="text-[10px] uppercase tracking-[0.05em] text-muted">Ek Ayarlar</span>
-                        </div>
-                        <ChevronDown size={16} className="text-muted" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="border-t border-black/[0.06] p-4 dark:border-white/[0.08]">
-                <button
-                  type="button"
-                  onClick={handleGenerate}
-                  disabled={isGenerating}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-black/[0.08] bg-black/90 px-4 py-3 text-[12px] font-medium uppercase tracking-[0.02em] text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[0.08] dark:bg-white dark:text-black"
-                >
-                  {isGenerating ? (
-                    <><Loader size={14} className="animate-spin" />Oluşturuluyor...</>
-                  ) : (
-                    <>Oluştur<ArrowRight size={14} /></>
-                  )}
-                </button>
-                {jobMessage ? <p className="mt-2 text-[11px] text-muted">{jobMessage}</p> : null}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <StudioResultsPanel
+    <StudioToolShell
+      results={(
+        <StudioWideResultsPanel
           footer={
             config.showHistory !== false ? (
               <div className="rounded-[1.35rem] border border-black/[0.05] bg-[var(--card-bg)] p-4 dark:border-white/[0.06]">
@@ -2435,7 +2095,7 @@ export default function StudioToolWorkspace({ tool }) {
                 {resultImages.length > 0 ? (
                   <div className="grid grid-cols-3 gap-2">
                     {resultImages.slice(0, 3).map((url, i) => (
-                      <div key={url} className="aspect-[5/4] overflow-hidden rounded-xl">
+                      <div key={url} className="aspect-[16/9] overflow-hidden rounded-xl">
                         <img src={url} alt={`Sonuç ${i + 1}`} className="h-full w-full object-cover" />
                       </div>
                     ))}
@@ -2450,8 +2110,95 @@ export default function StudioToolWorkspace({ tool }) {
           }
         >
           <ResultPreview tool={tool} config={config} isGenerating={isGenerating} resultImages={resultImages} />
-        </StudioResultsPanel>
-      </div>
-    </div>
+        </StudioWideResultsPanel>
+      )}
+      settings={(
+        <StudioSettingsPanel
+          footer={(
+            <StudioGenerateBar
+              qualityLabel={config.quality}
+              creditCost={creditCost}
+              credits={credits}
+              onGenerate={handleGenerate}
+              isGenerating={isGenerating}
+              jobMessage={jobMessage}
+            />
+          )}
+        >
+          <StudioSettingsColumns
+            uploads={config.uploads.map((item) => (
+              <UploadCard key={item.label} compact item={item} toolLabel={tool.label} preview={uploadedFiles[item.label]} onFileChange={handleFileChange} />
+            ))}
+            controls={(
+              <>
+                {config.sections.map((section) => (
+                  <FastSectionCard key={section.id} section={section} />
+                ))}
+                {config.showCameraFrames !== false && (
+                  <StudioControlCard title="Kamera Çerçevesi" className="flex-1">
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {config.cameraFrames.map((frame, index) => (
+                        <button
+                          key={frame}
+                          type="button"
+                          className={`rounded-xl border px-2 py-2 text-xs font-medium tracking-tight transition-colors ${
+                            index === 0
+                              ? 'border-black/15 bg-black/[0.05] text-ink dark:border-white/20 dark:bg-white/[0.08] dark:text-white'
+                              : 'border-black/[0.06] text-muted hover:text-ink dark:border-white/[0.08] dark:hover:text-white'
+                          }`}
+                        >
+                          {frame}
+                        </button>
+                      ))}
+                    </div>
+                  </StudioControlCard>
+                )}
+                <StudioControlCard title="Kalite Modu" className="md:max-w-[200px]">
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between rounded-xl border border-black/[0.06] bg-[var(--card-bg)] px-3 py-2.5 transition-colors hover:bg-[var(--card-bg-hover)] dark:border-white/[0.08]"
+                  >
+                    <span className="text-sm font-medium tracking-tight text-ink dark:text-white">{config.quality}</span>
+                    <ChevronDown size={14} className="text-muted" />
+                  </button>
+                </StudioControlCard>
+              </>
+            )}
+            aside={(
+              <>
+                <StudioControlCard title="Prompt">
+                  <textarea
+                    value={promptText}
+                    onChange={(e) => setPromptText(e.target.value)}
+                    placeholder="Stil yönlendirmesi yazın..."
+                    rows={5}
+                    className="w-full resize-none rounded-xl border border-black/[0.06] bg-[var(--card-bg)] px-3 py-2.5 text-[12px] text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-black/10 dark:border-white/[0.08] dark:bg-white/[0.04] dark:text-white dark:focus:ring-white/10"
+                  />
+                </StudioControlCard>
+                {config.showGuide !== false && (
+                  <StudioControlCard title="Hızlı Akış">
+                    <div className="flex flex-col gap-2">
+                      {[
+                        'Önce kaynak görselleri ekleyin.',
+                        'Stil ve çıktı ayarlarını belirleyin.',
+                        'Kredi hazır olduğunda oluştur butonuyla üretimi başlatın.',
+                      ].map((step, index) => (
+                        <span
+                          key={step}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.05] bg-[var(--card-bg)] px-2.5 py-1 text-[10px] text-muted dark:border-white/[0.06]"
+                        >
+                          <span className="font-medium text-champagne">{index + 1}</span>
+                          {step}
+                        </span>
+                      ))}
+                    </div>
+                  </StudioControlCard>
+                )}
+              </>
+            )}
+          />
+        </StudioSettingsPanel>
+      )}
+    />
   )
 }

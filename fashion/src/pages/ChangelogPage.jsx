@@ -1,5 +1,6 @@
 import { Clock3 } from 'lucide-react'
 import Reveal from '../components/Reveal'
+import { SITE_NAME } from '@/lib/brand'
 
 const changelogGroups = [
   {
@@ -114,7 +115,7 @@ export default function ChangelogPage() {
                   Product Updates
                 </div>
                 <h1 className="mb-6 text-4xl font-medium tracking-tight text-white lg:text-[56px] lg:leading-[1.1]">
-                  What&apos;s new at <span className="font-serif italic opacity-90">nuladesign</span>
+                  What&apos;s new at <span className="font-serif italic opacity-90">{SITE_NAME}</span>
                 </h1>
                 <p className="mx-auto max-w-2xl text-xl leading-relaxed text-white/90 drop-shadow-md">
                   Şimdilik bu alan deneme içerikleriyle çalışıyor. Sonraki adımda changelog kayıtlarını backend&apos;den

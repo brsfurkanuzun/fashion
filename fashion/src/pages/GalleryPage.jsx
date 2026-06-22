@@ -38,6 +38,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { apiUrl } from '@/lib/api'
+import { SITE_DOWNLOAD_PREFIX } from '@/lib/brand'
 
 const TOOL_LABELS = {
   'cekim-model': 'Manken & Giyim',
@@ -76,7 +77,7 @@ function groupByDay(items) {
   return Array.from(map.entries()).map(([date, dayItems]) => ({ date, items: dayItems }))
 }
 
-async function downloadImage(url, filename = 'nuladesign-output.jpg') {
+async function downloadImage(url, filename = `${SITE_DOWNLOAD_PREFIX}-output.jpg`) {
   try {
     const res = await fetch(url)
     const blob = await res.blob()
@@ -527,7 +528,7 @@ export default function GalleryPage() {
             <div className="flex items-center gap-1">
               <button
                 type="button"
-                onClick={() => downloadImage(selectedItem.previewUrl, `nuladesign-${selectedItem.toolKey}.jpg`)}
+                onClick={() => downloadImage(selectedItem.previewUrl, `${SITE_DOWNLOAD_PREFIX}-${selectedItem.toolKey}.jpg`)}
                 className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition-colors hover:bg-white/10 hover:text-white"
                 aria-label="Download"
               >
@@ -604,7 +605,7 @@ export default function GalleryPage() {
                     <div className="flex items-center gap-1">
                       <button
                         type="button"
-                        onClick={() => downloadImage(selectedItem.previewUrl, `nuladesign-${selectedItem.toolKey}.jpg`)}
+                        onClick={() => downloadImage(selectedItem.previewUrl, `${SITE_DOWNLOAD_PREFIX}-${selectedItem.toolKey}.jpg`)}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/50 transition-colors hover:bg-white/10 hover:text-white"
                         aria-label="İndir"
                       >
