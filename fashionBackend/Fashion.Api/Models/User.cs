@@ -7,6 +7,8 @@ public sealed class User
     public string PasswordHash { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
     public string Role { get; set; } = "user";
+    /// <summary>Google / OAuth profil fotoğrafı URL (harici).</summary>
+    public string? ProfilePhotoUrl { get; set; }
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     /// <summary>Google hesap <c>sub</c> (openid). Şifreli hesapla eşleştirme için.</summary>

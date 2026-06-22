@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { apiUrl } from '@/lib/api'
+import { normalizeAuthResponse } from '@/lib/auth'
 import SocialOAuthButtons from '../components/SocialOAuthButtons'
 
 function normalizePaket(raw) {
@@ -84,13 +85,7 @@ export default function RegisterForPurchasePage() {
         return
       }
 
-      await login({
-        id: payload.id,
-        email: payload.email,
-        name: payload.displayName || form.email.split('@')[0] || 'user',
-        role: payload.role,
-        credits: payload.credits,
-      })
+      login(normalizeAuthResponse(payload))
       navigate(`/odeme?paket=${encodeURIComponent(paket)}`, { replace: true })
     } catch {
       setErrors({ general: 'Sunucuya bağlanılamadı.' })
@@ -111,19 +106,20 @@ export default function RegisterForPurchasePage() {
 
         <div className="glass-card rounded-2xl p-6 sm:p-8 shadow-sm">
           <div className="mb-6">
+            <p className="text-xs font-medium text-muted mb-3">Google ile kaydol</p>
             <SocialOAuthButtons
               layout="inline"
+              intent="register"
               disabled={loading}
-              onSuccess={async (payload) => {
-                await login({
-                  id: payload.id,
-                  email: payload.email,
-                  name: payload.displayName || payload.email?.split('@')[0] || 'user',
-                  role: payload.role,
-                  credits: payload.credits ?? 0,
-                })
-                navigate(`/odeme?paket=${encodeURIComponent(paket)}`, { replace: true })
+              onSuccess={(payload) => {
+                const result = login(normalizeAuthResponse(payload))
+                if (result.ok) {
+                  navigate(`/odeme?paket=${encodeURIComponent(paket)}`, { replace: true })
+                } else {
+                  setErrors({ general: result.message || 'Google ile kayıt tamamlanamadı.' })
+                }
               }}
+              onStart={() => setLoading(true)}
             />
           </div>
           <div className="flex items-center gap-4 mb-6 text-muted">

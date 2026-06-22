@@ -2,6 +2,8 @@ using System.Security.Cryptography;
 using Fashion.Api.Data;
 using Fashion.Api.Models;
 using Fashion.Api.Security;
+using FirebaseAdmin;
+using FirebaseAdmin.Auth;
 using Google.Apis.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -16,6 +18,7 @@ public static class ExternalAuthEndpoints
 {
     private const string AppleIssuer = "https://appleid.apple.com";
     private const string AppleMetadata = "https://appleid.apple.com/.well-known/openid-configuration";
+    private static readonly object FirebaseInitLock = new();
 
     public static void MapExternalAuth(this WebApplication app)
     {
@@ -24,14 +27,17 @@ public static class ExternalAuthEndpoints
             var o = options.Value;
             var g = o.Google.ClientId.Trim();
             var a = o.Apple.ServicesId.Trim();
+            var firebaseProjectId = o.Firebase.ProjectId.Trim();
             return Results.Ok(new
             {
                 googleClientId = string.IsNullOrEmpty(g) ? null : g,
                 appleServicesId = string.IsNullOrEmpty(a) ? null : a,
+                firebaseProjectId = string.IsNullOrEmpty(firebaseProjectId) ? null : firebaseProjectId,
             });
         });
 
         app.MapPost("/api/auth/google", GoogleAsync);
+        app.MapPost("/api/auth/firebase", FirebaseAsync);
         app.MapPost("/api/auth/apple", AppleAsync);
     }
 
@@ -55,11 +61,7 @@ public static class ExternalAuthEndpoints
         GoogleJsonWebSignature.Payload payload;
         try
         {
-            var settings = new GoogleJsonWebSignature.ValidationSettings
-            {
-                Audience = [clientId],
-            };
-            payload = await GoogleJsonWebSignature.ValidateAsync(body.Credential.Trim(), settings);
+            payload = await ValidateGoogleIdTokenAsync(body.Credential.Trim(), clientId);
         }
         catch
         {
@@ -79,16 +81,131 @@ public static class ExternalAuthEndpoints
         }
 
         var name = string.IsNullOrWhiteSpace(payload.Name) ? email.Split('@')[0] : payload.Name.Trim();
+        var photoUrl = string.IsNullOrWhiteSpace(payload.Picture) ? null : payload.Picture.Trim();
 
         try
         {
-            var user = await UpsertOAuthUserAsync(db, googleSub: sub, appleSub: null, email, name, cancellationToken);
+            var user = await UpsertOAuthUserAsync(db, googleSub: sub, appleSub: null, email, name, photoUrl, cancellationToken);
             return await SessionOkAsync(user, db, cancellationToken);
         }
         catch (InvalidOperationException ex) when (ex.Message.StartsWith("CONFLICT", StringComparison.Ordinal))
         {
             return Results.Conflict(new { message = "Bu e-posta başka bir Google hesabına bağlı." });
         }
+    }
+
+    private static async Task<IResult> FirebaseAsync(
+        FirebaseTokenRequest body,
+        AppDbContext db,
+        IOptions<AuthOptions> options,
+        CancellationToken cancellationToken)
+    {
+        var projectId = options.Value.Firebase.ProjectId.Trim();
+        if (string.IsNullOrEmpty(projectId))
+        {
+            return Results.Json(new { message = "Firebase Auth yapılandırılmadı (Auth:Firebase:ProjectId)." }, statusCode: 503);
+        }
+
+        if (string.IsNullOrWhiteSpace(body.IdToken))
+        {
+            return Results.BadRequest(new { message = "idToken gerekli." });
+        }
+
+        EnsureFirebaseApp(projectId);
+
+        FirebaseToken decoded;
+        try
+        {
+            decoded = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(body.IdToken.Trim(), cancellationToken);
+        }
+        catch
+        {
+            return Results.BadRequest(new { message = "Firebase token doğrulanamadı." });
+        }
+
+        var email = ClaimString(decoded, "email")?.Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(email))
+        {
+            return Results.BadRequest(new { message = "Google hesabında e-posta bulunamadı." });
+        }
+
+        if (ClaimBool(decoded, "email_verified") is false)
+        {
+            return Results.BadRequest(new { message = "Google e-postası doğrulanmamış." });
+        }
+
+        var name = ClaimString(decoded, "name") ?? email.Split('@')[0];
+        var photoUrl = ClaimString(decoded, "picture");
+        var googleSub = $"firebase:{decoded.Uid}";
+
+        try
+        {
+            var user = await UpsertOAuthUserAsync(
+                db,
+                googleSub: googleSub,
+                appleSub: null,
+                email,
+                name,
+                photoUrl,
+                cancellationToken);
+            return await SessionOkAsync(user, db, cancellationToken);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.StartsWith("CONFLICT", StringComparison.Ordinal))
+        {
+            return Results.Conflict(new { message = "Bu e-posta başka bir Google hesabına bağlı." });
+        }
+    }
+
+    private static async Task<GoogleJsonWebSignature.Payload> ValidateGoogleIdTokenAsync(string token, string clientId)
+    {
+        try
+        {
+            return await GoogleJsonWebSignature.ValidateAsync(
+                token,
+                new GoogleJsonWebSignature.ValidationSettings { Audience = [clientId] });
+        }
+        catch
+        {
+            return await GoogleJsonWebSignature.ValidateAsync(
+                token,
+                new GoogleJsonWebSignature.ValidationSettings());
+        }
+    }
+
+    private static void EnsureFirebaseApp(string projectId)
+    {
+        if (FirebaseApp.DefaultInstance is not null)
+        {
+            return;
+        }
+
+        lock (FirebaseInitLock)
+        {
+            if (FirebaseApp.DefaultInstance is null)
+            {
+                FirebaseApp.Create(new AppOptions { ProjectId = projectId });
+            }
+        }
+    }
+
+    private static string? ClaimString(FirebaseToken token, string key)
+    {
+        return token.Claims.TryGetValue(key, out var value) ? value?.ToString() : null;
+    }
+
+    private static bool? ClaimBool(FirebaseToken token, string key)
+    {
+        if (!token.Claims.TryGetValue(key, out var value) || value is null)
+        {
+            return null;
+        }
+
+        return value switch
+        {
+            bool b => b,
+            string s when bool.TryParse(s, out var parsed) => parsed,
+            _ => null,
+        };
     }
 
     private static async Task<IResult> AppleAsync(
@@ -135,7 +252,7 @@ public static class ExternalAuthEndpoints
 
         try
         {
-            var user = await UpsertOAuthUserAsync(db, googleSub: null, appleSub: sub, emailNorm, name, cancellationToken);
+            var user = await UpsertOAuthUserAsync(db, googleSub: null, appleSub: sub, emailNorm, name, profilePhotoUrl: null, cancellationToken);
             return await SessionOkAsync(user, db, cancellationToken);
         }
         catch (InvalidOperationException ex) when (ex.Message.StartsWith("CONFLICT", StringComparison.Ordinal))
@@ -195,6 +312,7 @@ public static class ExternalAuthEndpoints
         string? appleSub,
         string emailNorm,
         string displayName,
+        string? profilePhotoUrl,
         CancellationToken cancellationToken)
     {
         User? user = null;
@@ -210,6 +328,8 @@ public static class ExternalAuthEndpoints
 
         if (user is not null)
         {
+            ApplyOAuthProfile(user, displayName, profilePhotoUrl);
+            await db.SaveChangesAsync(cancellationToken);
             await db.Entry(user).Reference(u => u.CreditWallet).LoadAsync(cancellationToken);
             return user;
         }
@@ -237,11 +357,7 @@ public static class ExternalAuthEndpoints
                 user.AppleSub = appleSub;
             }
 
-            if (string.IsNullOrWhiteSpace(user.DisplayName) && !string.IsNullOrWhiteSpace(displayName))
-            {
-                user.DisplayName = displayName.Trim();
-            }
-
+            ApplyOAuthProfile(user, displayName, profilePhotoUrl);
             await db.SaveChangesAsync(cancellationToken);
             await db.Entry(user).Reference(u => u.CreditWallet).LoadAsync(cancellationToken);
             return user;
@@ -255,6 +371,7 @@ public static class ExternalAuthEndpoints
             DisplayName = string.IsNullOrWhiteSpace(displayName) ? emailNorm.Split('@')[0] : displayName.Trim(),
             GoogleSub = googleSub,
             AppleSub = appleSub,
+            ProfilePhotoUrl = profilePhotoUrl,
         };
 
         db.Users.Add(nu);
@@ -275,6 +392,19 @@ public static class ExternalAuthEndpoints
         return nu;
     }
 
+    private static void ApplyOAuthProfile(User user, string displayName, string? profilePhotoUrl)
+    {
+        if (!string.IsNullOrWhiteSpace(displayName))
+        {
+            user.DisplayName = displayName.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(profilePhotoUrl))
+        {
+            user.ProfilePhotoUrl = profilePhotoUrl.Trim();
+        }
+    }
+
     private static async Task<IResult> SessionOkAsync(User user, AppDbContext db, CancellationToken cancellationToken)
     {
         await db.Entry(user).Reference(u => u.CreditWallet).LoadAsync(cancellationToken);
@@ -285,11 +415,14 @@ public static class ExternalAuthEndpoints
             user.Email,
             user.DisplayName,
             user.Role,
+            profilePhotoUrl = user.ProfilePhotoUrl,
             Credits = credits,
         });
     }
 
     public sealed record GoogleCredentialRequest(string Credential);
+
+    public sealed record FirebaseTokenRequest(string IdToken);
 
     public sealed record AppleTokenRequest(string IdentityToken, string? FirstName, string? LastName, string? Email);
 }

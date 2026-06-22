@@ -79,9 +79,9 @@ try
             await db.Database.MigrateAsync();
         }
 
-        await SeedData.InitializeAsync(db);
-        await PayTrPaymentEndpoints.EnsurePaymentOrdersTableAsync(db);
         await ExternalAuthSchema.EnsureExternalAuthColumnsAsync(db);
+        await PayTrPaymentEndpoints.EnsurePaymentOrdersTableAsync(db);
+        await SeedData.InitializeAsync(db);
     }
 }
 catch (Exception ex) when (continueOnInitFailure)
@@ -223,6 +223,7 @@ app.MapPost("/api/auth/login", async (LoginRequest request, AppDbContext db) =>
         user.Email,
         user.DisplayName,
         user.Role,
+        profilePhotoUrl = user.ProfilePhotoUrl,
         Credits = user.CreditWallet?.Balance ?? 0
     });
 });
@@ -292,6 +293,7 @@ app.MapGet("/api/me/{userId:guid}", async (Guid userId, AppDbContext db) =>
             user.Email,
             user.DisplayName,
             user.Role,
+            profilePhotoUrl = user.ProfilePhotoUrl,
             Credits = user.CreditWallet?.Balance ?? 0,
             user.CreatedAtUtc
         });

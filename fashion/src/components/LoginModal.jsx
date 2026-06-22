@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { X, Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { apiUrl } from '@/lib/api'
+import { normalizeAuthResponse } from '@/lib/auth'
 import { SITE_NAME } from '@/lib/brand'
 import SocialOAuthButtons from './SocialOAuthButtons'
 
@@ -41,8 +42,21 @@ export default function LoginModal({ open, onClose, initialMode = 'login' }) {
   const [form, setForm] = useState({ email: '', password: '', name: '' })
   const panelRef = useRef(null)
   const firstInputRef = useRef(null)
+  const videoRef = useRef(null)
 
   const copy = MODES[mode]
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+    if (open) {
+      video.currentTime = 0
+      video.play().catch(() => {})
+    } else {
+      video.pause()
+      video.currentTime = 0
+    }
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -163,13 +177,7 @@ export default function LoginModal({ open, onClose, initialMode = 'login' }) {
         return
       }
 
-      await login({
-        id: payload.id,
-        email: payload.email,
-        name: payload.displayName || form.email.split('@')[0] || 'user',
-        role: payload.role,
-        credits: payload.credits,
-      })
+      login(normalizeAuthResponse(payload))
     } catch {
       setLoading(false)
       setErrors({
@@ -179,21 +187,20 @@ export default function LoginModal({ open, onClose, initialMode = 'login' }) {
     }
 
     setLoading(false)
+    navigate('/studio', { replace: true })
     onClose()
-    navigate('/studio')
   }
 
-  const handleOAuthSuccess = async (payload) => {
-    await login({
-      id: payload.id,
-      email: payload.email,
-      name: payload.displayName || payload.email?.split('@')[0] || 'user',
-      role: payload.role,
-      credits: payload.credits ?? 0,
-    })
+  const handleOAuthSuccess = (payload) => {
+    const result = login(normalizeAuthResponse(payload))
+    if (!result.ok) {
+      setErrors({ general: result.message || 'Oturum kaydedilemedi.' })
+      setLoading(false)
+      return
+    }
     setLoading(false)
+    navigate('/studio', { replace: true })
     onClose()
-    navigate('/studio')
   }
 
   if (!open) return null
@@ -225,31 +232,40 @@ export default function LoginModal({ open, onClose, initialMode = 'login' }) {
           <X size={20} strokeWidth={1.5} />
         </button>
 
-        {/* Sol panel — marka */}
-        <div className="hidden lg:flex flex-col justify-between p-10 relative overflow-hidden bg-surface">
-          <div className="absolute inset-0 mesh-bg opacity-80" />
-          <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-champagne/5 blur-3xl" />
+        {/* Sol panel — video */}
+        <div className="hidden lg:flex flex-col justify-between p-10 relative overflow-hidden bg-black min-h-[520px]">
+          <video
+            ref={videoRef}
+            className="absolute inset-0 h-full w-full object-cover"
+            src="/videos/auth-panel.mp4"
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            aria-hidden
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/25" aria-hidden />
 
-          <div className="relative">
-            <span className="font-serif text-2xl tracking-tight">{SITE_NAME}</span>
+          <div className="relative z-10">
+            <span className="font-serif text-2xl tracking-tight text-white">{SITE_NAME}</span>
           </div>
 
-          <div className="relative">
-            <span className="inline-flex items-center gap-1.5 text-xs glass-card px-3 py-1.5 rounded-full text-champagne-dim mb-6">
+          <div className="relative z-10">
+            <span className="inline-flex items-center gap-1.5 text-xs glass-card px-3 py-1.5 rounded-full text-champagne-dim mb-6 border-white/10 bg-white/10 backdrop-blur-md">
               <Sparkles size={12} />
               AI Moda Stüdyosu
             </span>
-            <p className="font-serif text-3xl leading-snug tracking-tight">
+            <p className="font-serif text-3xl leading-snug tracking-tight text-white">
               Tek fotoğraf.
               <br />
               <em className="text-champagne not-italic">Sınırsız kampanya.</em>
             </p>
-            <p className="mt-4 text-sm text-muted font-light leading-relaxed max-w-xs">
+            <p className="mt-4 text-sm text-white/80 font-light leading-relaxed max-w-xs">
               Binlerce marka stüdyo kalitesinde görselleri saniyeler içinde üretiyor.
             </p>
           </div>
 
-          <p className="relative text-xs text-subtle">© {SITE_NAME}</p>
+          <p className="relative z-10 text-xs text-white/50">© {SITE_NAME}</p>
         </div>
 
         {/* Sağ panel — form */}
@@ -291,8 +307,10 @@ export default function LoginModal({ open, onClose, initialMode = 'login' }) {
                   <div className="mt-6">
                     <SocialOAuthButtons
                       layout="modal"
+                      intent={mode === 'register' ? 'register' : 'login'}
                       disabled={loading}
                       onSuccess={handleOAuthSuccess}
+                      onStart={() => setLoading(true)}
                     />
                   </div>
                   <div className="auth-divider my-6">

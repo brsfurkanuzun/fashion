@@ -1,10 +1,11 @@
 import { createContext, useContext, useEffect, useState } from 'react'
+import { normalizeAuthResponse } from '@/lib/auth'
 
 const STORAGE_KEY = 'nuladesign-auth'
 
 const AuthContext = createContext(null)
 
-function loadUser() {
+export function loadStoredUser() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     return raw ? JSON.parse(raw) : null
@@ -14,7 +15,7 @@ function loadUser() {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(loadUser)
+  const [user, setUser] = useState(loadStoredUser)
 
   useEffect(() => {
     if (user) {
@@ -24,14 +25,25 @@ export function AuthProvider({ children }) {
     }
   }, [user])
 
-  const login = async (data) => {
-    setUser({
-      id: data.id,
-      email: data.email,
-      name: data.name,
-      role: data.role || 'user',
-      credits: data.credits ?? 0,
-    })
+  const login = (data) => {
+    const next =
+      data?.id != null && data?.email != null
+        ? {
+            id: String(data.id),
+            email: String(data.email),
+            name: String(data.name ?? data.email.split('@')[0] ?? 'user'),
+            role: data.role || 'user',
+            credits: data.credits ?? 0,
+            profilePhotoUrl: data.profilePhotoUrl ?? null,
+          }
+        : normalizeAuthResponse(data)
+
+    if (!next.id) {
+      return { ok: false, message: 'Geçersiz oturum yanıtı.' }
+    }
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+    setUser(next)
     return { ok: true }
   }
 
@@ -41,12 +53,14 @@ export function AuthProvider({ children }) {
     setUser((prev) => (prev ? { ...prev, credits } : null))
   }
 
+  const sessionUser = user ?? loadStoredUser()
+
   return (
     <AuthContext.Provider
       value={{
-        user,
-        credits: user?.credits ?? 0,
-        isAuthenticated: !!user,
+        user: sessionUser,
+        credits: sessionUser?.credits ?? 0,
+        isAuthenticated: Boolean(sessionUser?.id),
         login,
         logout,
         setCredits,

@@ -13,6 +13,7 @@
     "@tailwindcss/typography": "^0.5.19",
     "@untitledui/icons": "^0.0.22",
     "clsx": "^2.1.1",
+    "firebase": "^12.15.0",
     "framer-motion": "^12.40.0",
     "lucide-react": "^1.16.0",
     "react": "^19.2.6",
