@@ -56,7 +56,8 @@ PayTr__MerchantId=
 PayTr__MerchantKey=
 PayTr__MerchantSalt=
 PayTr__FrontendBaseUrl=https://design.nulatechnology.com
-Auth__Google__ClientId=
+Auth__Google__ClientId=200815809385-Okj5jheifmshmqblt28r1i9jn42ecpjt.apps.googleusercontent.com
+Auth__Firebase__ProjectId=nuladesign-330cd
 Auth__Apple__ServicesId=
 ```
 

@@ -137,6 +137,7 @@ Frontend `GET /api/auth/client-config` ile public client id’leri alır. Render
 
 ```text
 Auth__Google__ClientId=....apps.googleusercontent.com
+Auth__Firebase__ProjectId=nuladesign-330cd
 Auth__Apple__ServicesId=com.example.web   # Services ID (bundle değil)
 ```
 
