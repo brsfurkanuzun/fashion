@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { apiUrl } from '@/lib/api'
+import { TrustInfoCard } from '@/components/compliance/CreditsComplianceSection'
 
 function loadPaytrResizer(onReady) {
   if (typeof window === 'undefined') return () => {}
@@ -36,6 +37,7 @@ export default function CheckoutPage() {
   const [token, setToken] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [creditsAcknowledged, setCreditsAcknowledged] = useState(false)
 
   useEffect(() => {
     if (!token) return
@@ -57,6 +59,10 @@ export default function CheckoutPage() {
     }
     if (phone.trim().length < 10 || address.trim().length < 5) {
       setError('Telefon (en az 10 karakter) ve adres (en az 5 karakter) gerekli.')
+      return
+    }
+    if (!creditsAcknowledged) {
+      setError('Devam etmek için dijital kredi onayını işaretleyin.')
       return
     }
     setLoading(true)
@@ -88,7 +94,7 @@ export default function CheckoutPage() {
     } finally {
       setLoading(false)
     }
-  }, [user?.id, packageKey, phone, address])
+  }, [user?.id, packageKey, phone, address, creditsAcknowledged])
 
   return (
     <div className="pt-28 pb-16 max-w-lg mx-auto px-5">
@@ -103,6 +109,8 @@ export default function CheckoutPage() {
 
       {!token && (
         <div className="glass-card rounded-2xl p-6 space-y-4 shadow-sm">
+          <TrustInfoCard />
+
           <div>
             <label className="block text-xs font-medium text-muted mb-1">Telefon</label>
             <input
@@ -123,11 +131,23 @@ export default function CheckoutPage() {
               autoComplete="street-address"
             />
           </div>
+          <label className="flex items-start gap-3 cursor-pointer group">
+            <input
+              type="checkbox"
+              className="auth-checkbox mt-0.5 shrink-0"
+              checked={creditsAcknowledged}
+              onChange={(e) => setCreditsAcknowledged(e.target.checked)}
+            />
+            <span className="text-xs text-muted leading-relaxed group-hover:text-ink transition-colors">
+              Dijital kredi satın aldığımı ve bu kredilerin yapay zekâ görsel üretim hizmetlerine erişim sağladığını
+              anlıyorum.
+            </span>
+          </label>
           {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
           <button
             type="button"
             onClick={startPayment}
-            disabled={loading}
+            disabled={loading || !creditsAcknowledged}
             className="w-full rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium py-2.5 disabled:opacity-50 cursor-pointer"
           >
             {loading ? 'Bağlanıyor…' : 'PayTR ile ödemeye geç'}

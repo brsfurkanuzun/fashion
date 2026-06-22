@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Check, Minus, ChevronDown } from 'lucide-react'
 import { ModernPricingPage } from '@/components/ui/animated-glassy-pricing'
+import CreditsComplianceSection from '@/components/compliance/CreditsComplianceSection'
 import Reveal from '../components/Reveal'
 import SectionLabel from '../components/SectionLabel'
 import { useAuth } from '../context/AuthContext'
@@ -203,6 +204,8 @@ export default function PricingPage() {
         subtitle="Parayı doğrudan krediye çevirirsiniz; üretimler araç ve kaliteye göre kredi harcar. Başlangıç paketi deneme, Profesyonel’de tutarı siz seçersiniz."
         plans={plans}
       />
+
+      <CreditsComplianceSection />
 
       <section className="max-w-[1400px] mx-auto px-5 sm:px-8 mt-20 sm:mt-28">
         <Reveal>

@@ -13,6 +13,10 @@ import ChangelogPage from './pages/ChangelogPage'
 import CheckoutPage from './pages/CheckoutPage'
 import PaymentResultPage from './pages/PaymentResultPage'
 import RegisterForPurchasePage from './pages/RegisterForPurchasePage'
+import TermsPage from './pages/legal/TermsPage'
+import PrivacyPage from './pages/legal/PrivacyPage'
+import RefundPolicyPage from './pages/legal/RefundPolicyPage'
+import ContactPage from './pages/legal/ContactPage'
 
 function LegacyFashionRedirect() {
   const location = useLocation()
@@ -93,6 +97,10 @@ export default function App() {
           }
         />
         <Route path="changelog" element={<ChangelogPage />} />
+        <Route path="kullanim-sartlari" element={<TermsPage />} />
+        <Route path="gizlilik" element={<PrivacyPage />} />
+        <Route path="iade-politikasi" element={<RefundPolicyPage />} />
+        <Route path="iletisim" element={<ContactPage />} />
       </Route>
     </Routes>
   )

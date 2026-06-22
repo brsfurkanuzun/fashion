@@ -36,8 +36,10 @@ const productLinks = [
 
 const resourceLinks = [
   { to: '/changelog', label: 'Changelog' },
-  { to: '#', label: 'Gizlilik' },
-  { to: '#', label: 'Kullanım şartları' },
+  { to: '/gizlilik', label: 'Gizlilik Politikası' },
+  { to: '/kullanim-sartlari', label: 'Kullanım Şartları' },
+  { to: '/iade-politikasi', label: 'İade Politikası' },
+  { to: '/iletisim', label: 'İletişim' },
 ]
 
 const social = [
@@ -91,7 +93,7 @@ export default function Footer({ onOpenLogin }) {
                 </a>
               ))}
               <a
-                href="mailto:destek@nuladesign.com"
+                href="mailto:support@nulatechnology.com"
                 className="ml-1 inline-flex items-center gap-2 rounded-xl border border-faint bg-elevated/60 px-3.5 py-2 text-sm text-muted backdrop-blur-sm transition-all duration-200 hover:border-champagne/30 hover:text-champagne"
               >
                 <Mail size={16} strokeWidth={1.5} className="text-champagne-dim shrink-0" />
