@@ -6,14 +6,12 @@ import { AuthProvider } from './context/AuthContext'
 import './styles/globals.css'
 import './index.css'
 import App from './App.jsx'
-import GoogleAuthRedirectHandler from './components/GoogleAuthRedirectHandler.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <GoogleAuthRedirectHandler />
           <App />
         </AuthProvider>
       </ThemeProvider>
