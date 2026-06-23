@@ -3,6 +3,7 @@ import {
   getAuth,
   getRedirectResult,
   GoogleAuthProvider,
+  signInWithPopup,
   signInWithRedirect,
   type Auth,
   type User,
@@ -39,20 +40,44 @@ export function getFirebaseAuth(): Auth | null {
 function googleProvider() {
   const provider = new GoogleAuthProvider()
   provider.setCustomParameters({ prompt: 'select_account' })
+  provider.addScope('email')
+  provider.addScope('profile')
   return provider
 }
 
-export async function startGoogleFirebaseRedirect(): Promise<void> {
-  const auth = getFirebaseAuth()
-  if (!auth) throw new Error('Firebase yapılandırılmadı.')
-  sessionStorage.removeItem(ID_TOKEN_BACKUP_KEY)
-  redirectResultPromise = null
-  await signInWithRedirect(auth, googleProvider())
+async function tokenFromUser(user: User) {
+  const idToken = await user.getIdToken(true)
+  if (!idToken) throw new Error('Firebase oturum belirteci alınamadı.')
+  sessionStorage.setItem(ID_TOKEN_BACKUP_KEY, idToken)
+  return { idToken, user }
 }
 
-/**
- * getRedirectResult yalnızca bir kez çalışır (React StrictMode güvenli).
- */
+/** Popup → başarısızsa redirect. Firebase kendi OAuth client'ını kullanır (GIS invalid_client olmaz). */
+export async function signInWithGoogleFirebase(): Promise<{ idToken: string; user: User }> {
+  const auth = getFirebaseAuth()
+  if (!auth) throw new Error('Firebase yapılandırılmadı.')
+
+  try {
+    const result = await signInWithPopup(auth, googleProvider())
+    return tokenFromUser(result.user)
+  } catch (e) {
+    const code = (e as { code?: string })?.code
+    if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+      throw e
+    }
+    if (code === 'auth/popup-blocked') {
+      sessionStorage.setItem(OAUTH_RETURN_KEY, `${window.location.pathname}${window.location.search}`)
+      redirectResultPromise = null
+      sessionStorage.removeItem(ID_TOKEN_BACKUP_KEY)
+      await signInWithRedirect(auth, googleProvider())
+      const err = new Error('Yönlendiriliyor…') as Error & { code?: string }
+      err.code = 'auth/redirecting'
+      throw err
+    }
+    throw e
+  }
+}
+
 export function completeGoogleFirebaseRedirect(): Promise<{ idToken: string; user: User } | null> {
   if (!redirectResultPromise) {
     redirectResultPromise = resolveGoogleFirebaseRedirect()
@@ -65,30 +90,19 @@ async function resolveGoogleFirebaseRedirect(): Promise<{ idToken: string; user:
   if (!auth) return null
 
   try {
+    await auth.authStateReady()
     const result = await getRedirectResult(auth)
-    if (result?.user) {
-      const idToken = await result.user.getIdToken(true)
-      if (idToken) {
-        sessionStorage.setItem(ID_TOKEN_BACKUP_KEY, idToken)
-        return { idToken, user: result.user }
-      }
-    }
+    if (result?.user) return tokenFromUser(result.user)
   } catch {
-    /* StrictMode veya tekrar çağrı */
+    /* StrictMode */
   }
 
   const backup = sessionStorage.getItem(ID_TOKEN_BACKUP_KEY)
-  if (backup) {
-    return { idToken: backup, user: auth.currentUser! }
+  if (backup && auth.currentUser) {
+    return { idToken: backup, user: auth.currentUser }
   }
 
-  if (auth.currentUser) {
-    const idToken = await auth.currentUser.getIdToken(true)
-    if (idToken) {
-      sessionStorage.setItem(ID_TOKEN_BACKUP_KEY, idToken)
-      return { idToken, user: auth.currentUser }
-    }
-  }
+  if (auth.currentUser) return tokenFromUser(auth.currentUser)
 
   return null
 }

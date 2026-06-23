@@ -27,17 +27,14 @@ export default function GoogleAuthRedirectHandler() {
         if (!session?.idToken) return
 
         setBusy(true)
-        setError('')
-
         const res = await apiFetch('/api/auth/firebase', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ idToken: session.idToken }),
         })
         const data = await res.json().catch(() => ({}))
-
         if (!res.ok) {
-          setError(data.message || `Giriş başarısız (${res.status}).`)
+          setError(data.message || 'Google girişi başarısız.')
           return
         }
 
@@ -52,7 +49,7 @@ export default function GoogleAuthRedirectHandler() {
         sessionStorage.removeItem(OAUTH_RETURN_KEY)
         navigate(returnTo, { replace: true })
       } catch {
-        setError('Sunucuya bağlanılamadı. Biraz bekleyip tekrar deneyin.')
+        setError('Sunucuya bağlanılamadı.')
       } finally {
         setBusy(false)
       }
