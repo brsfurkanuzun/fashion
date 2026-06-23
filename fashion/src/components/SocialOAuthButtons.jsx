@@ -52,83 +52,105 @@ function AppleGlyph() {
   )
 }
 
+async function postAuth(path, body) {
+  let res
+  try {
+    res = await fetch(apiUrl(path), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+  } catch {
+    throw new Error('Sunucuya bağlanılamadı. Sayfayı https:// ile açın.')
+  }
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(data.message || `Giriş başarısız (${res.status}).`)
+  }
+  return data
+}
+
 /**
- * Google (Firebase veya GIS) / Apple ile oturum.
- * Backend: `POST /api/auth/google` — e-posta, isim, fotoğraf DB'ye yazılır.
+ * Google (GIS öncelikli, Firebase yedek) / Apple ile oturum.
  */
 export default function SocialOAuthButtons({ onSuccess, onStart, disabled, layout = 'modal', intent = 'login' }) {
   const googleDivRef = useRef(null)
-  const useFirebase = isFirebaseConfigured()
-  const [cfg, setCfg] = useState({ googleClientId: null, appleServicesId: null })
+  const firebaseAvailable = isFirebaseConfigured()
+  const [cfg, setCfg] = useState({ googleClientId: null, appleServicesId: null, configLoaded: false })
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const onSuccessRef = useRef(onSuccess)
   onSuccessRef.current = onSuccess
 
-  const googleEnabled = useFirebase || Boolean(cfg.googleClientId)
+  const useGis = Boolean(cfg.googleClientId)
+  const googleEnabled = useGis || firebaseAvailable
 
   useEffect(() => {
     let cancelled = false
     fetch(apiUrl('/api/auth/client-config'))
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`API ${r.status}`)
+        return r.json()
+      })
       .then((d) => {
         if (!cancelled) {
           setCfg({
             googleClientId: d.googleClientId ?? null,
             appleServicesId: d.appleServicesId ?? null,
+            configLoaded: true,
           })
         }
       })
-      .catch(() => {})
+      .catch(() => {
+        if (!cancelled) {
+          setCfg((c) => ({ ...c, configLoaded: true }))
+          if (!firebaseAvailable) {
+            setError('API yapılandırması alınamadı. Backend bağlantısını kontrol edin.')
+          }
+        }
+      })
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [firebaseAvailable])
 
-  const postToken = useCallback(async (path, body) => {
+  const completeAuth = useCallback(async (path, body) => {
     setBusy(true)
     setError('')
+    onStart?.()
     try {
-      const res = await fetch(apiUrl(path), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        setError(data.message || 'Giriş başarısız.')
-        return false
-      }
+      const data = await postAuth(path, body)
       onSuccessRef.current(data)
-      return true
-    } catch {
-      setError('Sunucuya bağlanılamadı.')
-      return false
+    } catch (e) {
+      setError(e?.message || 'Giriş başarısız.')
     } finally {
       setBusy(false)
     }
-  }, [])
+  }, [onStart])
 
   const handleGoogleFirebase = async () => {
     if (disabled || busy) return
-    onStart?.()
     setBusy(true)
     setError('')
+    onStart?.()
     try {
       const { idToken } = await signInWithGoogleFirebase()
-      const ok = await postToken('/api/auth/firebase', { idToken })
-      if (!ok) setBusy(false)
+      const data = await postAuth('/api/auth/firebase', { idToken })
+      onSuccessRef.current(data)
     } catch (e) {
       const code = e?.code
-      if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') {
+      if (code === 'auth/unauthorized-domain') {
+        setError('Firebase: design.nulatechnology.com Authorized domains listesine eklenmeli.')
+      } else if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') {
         setError(e?.message || 'Google girişi başarısız.')
       }
+    } finally {
       setBusy(false)
     }
   }
 
   useEffect(() => {
-    if (useFirebase) return undefined
+    if (!useGis) return undefined
 
     const cid = cfg.googleClientId
     const el = googleDivRef.current
@@ -146,9 +168,10 @@ export default function SocialOAuthButtons({ onSuccess, onStart, disabled, layou
         window.google.accounts.id.initialize({
           client_id: cid,
           callback: (resp) => {
-            if (resp?.credential) postToken('/api/auth/google', { credential: resp.credential })
+            if (resp?.credential) completeAuth('/api/auth/google', { credential: resp.credential })
           },
           auto_select: false,
+          ux_mode: 'popup',
         })
         window.google.accounts.id.renderButton(host, {
           type: 'standard',
@@ -168,7 +191,7 @@ export default function SocialOAuthButtons({ onSuccess, onStart, disabled, layou
           host.innerHTML = ''
         }
       } catch {
-        /* ignore */
+        setError('Google oturum bileşeni yüklenemedi.')
       }
     })()
 
@@ -176,7 +199,7 @@ export default function SocialOAuthButtons({ onSuccess, onStart, disabled, layou
       cancelled = true
       cleanup()
     }
-  }, [cfg.googleClientId, layout, postToken, intent, useFirebase])
+  }, [cfg.googleClientId, layout, completeAuth, intent, useGis])
 
   const handleApple = async () => {
     const sid = cfg.appleServicesId
@@ -186,6 +209,7 @@ export default function SocialOAuthButtons({ onSuccess, onStart, disabled, layou
     }
     setBusy(true)
     setError('')
+    onStart?.()
     try {
       await loadScriptOnce('https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js')
       if (!window.AppleID?.auth) {
@@ -205,15 +229,16 @@ export default function SocialOAuthButtons({ onSuccess, onStart, disabled, layou
         return
       }
       const u = res?.user
-      await postToken('/api/auth/apple', {
+      const data = await postAuth('/api/auth/apple', {
         identityToken: token,
         firstName: u?.name?.firstName,
         lastName: u?.name?.lastName,
         email: u?.email,
       })
+      onSuccessRef.current(data)
     } catch (e) {
       if (e?.error !== 'popup_closed_by_user') {
-        setError('Apple girişi iptal edildi veya başarısız.')
+        setError(e?.message || 'Apple girişi iptal edildi veya başarısız.')
       }
     } finally {
       setBusy(false)
@@ -228,11 +253,10 @@ export default function SocialOAuthButtons({ onSuccess, onStart, disabled, layou
 
   const googleLabel = intent === 'register' ? 'Google ile kaydol' : 'Google ile devam et'
 
-  if (!googleEnabled && !cfg.appleServicesId) {
+  if (cfg.configLoaded && !googleEnabled && !cfg.appleServicesId) {
     return (
       <p className="text-xs text-muted leading-relaxed rounded-lg border border-faint bg-elevated/50 px-3 py-2.5">
-        Google ile giriş için <span className="font-mono text-[11px]">VITE_FIREBASE_*</span> veya API&apos;de{' '}
-        <span className="font-mono text-[11px]">Auth:Google:ClientId</span> tanımlayın.
+        Google ile giriş için API&apos;de <span className="font-mono text-[11px]">Auth:Google:ClientId</span> tanımlayın.
       </p>
     )
   }
@@ -248,16 +272,16 @@ export default function SocialOAuthButtons({ onSuccess, onStart, disabled, layou
       )}
       <div className={`grid gap-3 ${gridCols}`}>
         {googleEnabled &&
-          (useFirebase ? (
-            <button type="button" disabled={dim} onClick={handleGoogleFirebase} className={btnClass}>
-              <GoogleGlyph />
-              {googleLabel}
-            </button>
-          ) : (
+          (useGis ? (
             <div
               ref={googleDivRef}
               className="flex min-h-[44px] items-center justify-center [&>iframe]:max-w-full"
             />
+          ) : (
+            <button type="button" disabled={dim} onClick={handleGoogleFirebase} className={btnClass}>
+              <GoogleGlyph />
+              {googleLabel}
+            </button>
           ))}
         {cfg.appleServicesId && (
           <button type="button" disabled={dim} onClick={handleApple} className={btnClass}>
