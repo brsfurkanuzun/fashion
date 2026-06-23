@@ -1,6 +1,6 @@
 const PROD_HOSTS = new Set(['design.nulatechnology.com', 'www.design.nulatechnology.com'])
 
-const RAILWAY_API = 'https://fashion-production-bc9c.up.railway.app'
+export const RAILWAY_API = 'https://fashion-production-bc9c.up.railway.app'
 
 function trimBase(url: string) {
   return url.replace(/\/$/, '')
@@ -14,28 +14,33 @@ function isProdHost(): boolean {
   return typeof window !== 'undefined' && PROD_HOSTS.has(window.location.hostname)
 }
 
-/** Canlıda önce aynı domain /api (htaccess proxy), sonra Railway. */
-export function getApiBaseCandidates(): string[] {
+/** Canlıda doğrudan Railway URL — /api proxy Host header yüzünden 404 veriyordu. */
+export function getApiBaseUrl(): string {
   const env = envApiBase()
-  if (isProdHost()) {
-    const out = ['']
-    if (env) out.push(env)
-    else out.push(RAILWAY_API)
-    return [...new Set(out)]
-  }
-  return env ? [env] : ['']
+  if (isProdHost()) return env || RAILWAY_API
+  return env
 }
 
-export const API_BASE_URL = envApiBase()
+export function getApiBaseCandidates(): string[] {
+  const primary = getApiBaseUrl()
+  return primary ? [primary] : ['']
+}
 
-export function apiUrl(path: string, base = getApiBaseCandidates()[0]) {
+export const API_BASE_URL = getApiBaseUrl()
+
+export function apiUrl(path: string) {
   const p = path.startsWith('/') ? path : `/${path}`
-  return `${base}${p}`
+  return `${getApiBaseUrl()}${p}`
 }
 
-function looksLikeSpaHtml(res: Response): boolean {
-  const ct = res.headers.get('content-type') ?? ''
-  return ct.includes('text/html')
+async function isBrokenProxyResponse(res: Response): Promise<boolean> {
+  if (res.ok) return false
+  try {
+    const data = await res.clone().json()
+    return data?.message === 'Application not found' || data?.status === 'error'
+  } catch {
+    return false
+  }
 }
 
 export async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
@@ -45,7 +50,10 @@ export async function apiFetch(path: string, init?: RequestInit): Promise<Respon
   for (const base of getApiBaseCandidates()) {
     try {
       const res = await fetch(`${base}${p}`, init)
-      if (!base && looksLikeSpaHtml(res)) continue
+      if (await isBrokenProxyResponse(res)) {
+        lastError = new Error('API proxy hatası — doğrudan backend kullanılıyor.')
+        continue
+      }
       return res
     } catch (e) {
       lastError = e
