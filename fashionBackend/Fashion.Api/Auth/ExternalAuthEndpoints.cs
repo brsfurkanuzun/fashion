@@ -2,8 +2,6 @@ using System.Security.Cryptography;
 using Fashion.Api.Data;
 using Fashion.Api.Models;
 using Fashion.Api.Security;
-using FirebaseAdmin;
-using FirebaseAdmin.Auth;
 using Google.Apis.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -18,7 +16,6 @@ public static class ExternalAuthEndpoints
 {
     private const string AppleIssuer = "https://appleid.apple.com";
     private const string AppleMetadata = "https://appleid.apple.com/.well-known/openid-configuration";
-    private static readonly object FirebaseInitLock = new();
 
     public static void MapExternalAuth(this WebApplication app)
     {
@@ -98,6 +95,7 @@ public static class ExternalAuthEndpoints
         FirebaseTokenRequest body,
         AppDbContext db,
         IOptions<AuthOptions> options,
+        ILogger<Program> logger,
         CancellationToken cancellationToken)
     {
         var projectId = options.Value.Firebase.ProjectId.Trim();
@@ -111,32 +109,31 @@ public static class ExternalAuthEndpoints
             return Results.BadRequest(new { message = "idToken gerekli." });
         }
 
-        EnsureFirebaseApp(projectId);
-
-        FirebaseToken decoded;
+        FirebaseIdClaims claims;
         try
         {
-            decoded = await FirebaseAuth.DefaultInstance.VerifyIdTokenAsync(body.IdToken.Trim(), cancellationToken);
+            claims = await FirebaseIdTokenVerifier.VerifyAsync(body.IdToken.Trim(), projectId, cancellationToken);
         }
-        catch
+        catch (Exception ex)
         {
+            logger.LogWarning(ex, "Firebase token doğrulanamadı");
             return Results.BadRequest(new { message = "Firebase token doğrulanamadı." });
         }
 
-        var email = ClaimString(decoded, "email")?.Trim().ToLowerInvariant();
+        var email = claims.Email;
         if (string.IsNullOrEmpty(email))
         {
             return Results.BadRequest(new { message = "Google hesabında e-posta bulunamadı." });
         }
 
-        if (ClaimBool(decoded, "email_verified") is false)
+        if (claims.EmailVerified is false)
         {
             return Results.BadRequest(new { message = "Google e-postası doğrulanmamış." });
         }
 
-        var name = ClaimString(decoded, "name") ?? email.Split('@')[0];
-        var photoUrl = ClaimString(decoded, "picture");
-        var googleSub = $"firebase:{decoded.Uid}";
+        var name = claims.Name ?? email.Split('@')[0];
+        var photoUrl = claims.Picture;
+        var googleSub = claims.Subject;
 
         try
         {
@@ -154,6 +151,11 @@ public static class ExternalAuthEndpoints
         {
             return Results.Conflict(new { message = "Bu e-posta başka bir Google hesabına bağlı." });
         }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Firebase kullanıcı kaydı başarısız");
+            return Results.Json(new { message = "Kullanıcı kaydedilemedi." }, statusCode: 500);
+        }
     }
 
     private static async Task<GoogleJsonWebSignature.Payload> ValidateGoogleIdTokenAsync(string token, string clientId)
@@ -170,42 +172,6 @@ public static class ExternalAuthEndpoints
                 token,
                 new GoogleJsonWebSignature.ValidationSettings());
         }
-    }
-
-    private static void EnsureFirebaseApp(string projectId)
-    {
-        if (FirebaseApp.DefaultInstance is not null)
-        {
-            return;
-        }
-
-        lock (FirebaseInitLock)
-        {
-            if (FirebaseApp.DefaultInstance is null)
-            {
-                FirebaseApp.Create(new AppOptions { ProjectId = projectId });
-            }
-        }
-    }
-
-    private static string? ClaimString(FirebaseToken token, string key)
-    {
-        return token.Claims.TryGetValue(key, out var value) ? value?.ToString() : null;
-    }
-
-    private static bool? ClaimBool(FirebaseToken token, string key)
-    {
-        if (!token.Claims.TryGetValue(key, out var value) || value is null)
-        {
-            return null;
-        }
-
-        return value switch
-        {
-            bool b => b,
-            string s when bool.TryParse(s, out var parsed) => parsed,
-            _ => null,
-        };
     }
 
     private static async Task<IResult> AppleAsync(
@@ -339,12 +305,15 @@ public static class ExternalAuthEndpoints
         {
             if (!string.IsNullOrEmpty(googleSub))
             {
-                if (!string.IsNullOrEmpty(user.GoogleSub) && user.GoogleSub != googleSub)
+                if (string.IsNullOrEmpty(user.GoogleSub))
                 {
-                    throw new InvalidOperationException("CONFLICT:google");
+                    user.GoogleSub = googleSub;
                 }
-
-                user.GoogleSub = googleSub;
+                else if (user.GoogleSub != googleSub)
+                {
+                    // Aynı e-posta, farklı Google/Firebase ID — güncel ID ile devam et
+                    user.GoogleSub = googleSub;
+                }
             }
 
             if (!string.IsNullOrEmpty(appleSub))
@@ -411,12 +380,12 @@ public static class ExternalAuthEndpoints
         var credits = user.CreditWallet?.Balance ?? 0;
         return Results.Ok(new
         {
-            user.Id,
-            user.Email,
-            user.DisplayName,
-            user.Role,
+            id = user.Id,
+            email = user.Email,
+            displayName = user.DisplayName,
+            role = user.Role,
             profilePhotoUrl = user.ProfilePhotoUrl,
-            Credits = credits,
+            credits = credits,
         });
     }
 

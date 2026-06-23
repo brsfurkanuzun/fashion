@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { apiUrl } from '@/lib/api'
+import { apiFetch } from '@/lib/api'
 import { normalizeAuthResponse } from '@/lib/auth'
 import SocialOAuthButtons from '../components/SocialOAuthButtons'
 
@@ -54,7 +54,7 @@ export default function RegisterForPurchasePage() {
     setLoading(true)
     setErrors({})
     try {
-      const registerResponse = await fetch(apiUrl('/api/auth/register'), {
+      const registerResponse = await apiFetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -70,7 +70,7 @@ export default function RegisterForPurchasePage() {
         return
       }
 
-      const loginResponse = await fetch(apiUrl('/api/auth/login'), {
+      const loginResponse = await apiFetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

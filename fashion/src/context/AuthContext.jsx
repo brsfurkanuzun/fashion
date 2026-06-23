@@ -47,20 +47,21 @@ export function AuthProvider({ children }) {
     return { ok: true }
   }
 
-  const logout = () => setUser(null)
+  const logout = () => {
+    localStorage.removeItem(STORAGE_KEY)
+    setUser(null)
+  }
 
   const setCredits = (credits) => {
     setUser((prev) => (prev ? { ...prev, credits } : null))
   }
 
-  const sessionUser = user ?? loadStoredUser()
-
   return (
     <AuthContext.Provider
       value={{
-        user: sessionUser,
-        credits: sessionUser?.credits ?? 0,
-        isAuthenticated: Boolean(sessionUser?.id),
+        user,
+        credits: user?.credits ?? 0,
+        isAuthenticated: Boolean(user?.id),
         login,
         logout,
         setCredits,

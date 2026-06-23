@@ -1,7 +1,58 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
+const PROD_HOSTS = new Set(['design.nulatechnology.com', 'www.design.nulatechnology.com'])
 
-export function apiUrl(path: string) {
-  return `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`
+const RAILWAY_API = 'https://fashion-production-bc9c.up.railway.app'
+
+function trimBase(url: string) {
+  return url.replace(/\/$/, '')
+}
+
+function envApiBase(): string {
+  return trimBase(import.meta.env.VITE_API_BASE_URL ?? '')
+}
+
+function isProdHost(): boolean {
+  return typeof window !== 'undefined' && PROD_HOSTS.has(window.location.hostname)
+}
+
+/** Canlıda önce aynı domain /api (htaccess proxy), sonra Railway. */
+export function getApiBaseCandidates(): string[] {
+  const env = envApiBase()
+  if (isProdHost()) {
+    const out = ['']
+    if (env) out.push(env)
+    else out.push(RAILWAY_API)
+    return [...new Set(out)]
+  }
+  return env ? [env] : ['']
+}
+
+export const API_BASE_URL = envApiBase()
+
+export function apiUrl(path: string, base = getApiBaseCandidates()[0]) {
+  const p = path.startsWith('/') ? path : `/${path}`
+  return `${base}${p}`
+}
+
+function looksLikeSpaHtml(res: Response): boolean {
+  const ct = res.headers.get('content-type') ?? ''
+  return ct.includes('text/html')
+}
+
+export async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
+  const p = path.startsWith('/') ? path : `/${path}`
+  let lastError: unknown
+
+  for (const base of getApiBaseCandidates()) {
+    try {
+      const res = await fetch(`${base}${p}`, init)
+      if (!base && looksLikeSpaHtml(res)) continue
+      return res
+    } catch (e) {
+      lastError = e
+    }
+  }
+
+  throw lastError ?? new Error('Sunucuya bağlanılamadı.')
 }
 
 export type ToolPricingRow = {
@@ -59,7 +110,7 @@ export async function fetchToolPricingMap(): Promise<Record<string, ToolPricingR
   const map: Record<string, ToolPricingRow[]> = {}
 
   try {
-    const res = await fetch(apiUrl('/api/tools'))
+    const res = await apiFetch('/api/tools')
     if (res.ok) Object.assign(map, buildPricingMap(await res.json()))
   } catch {
     // ignore
@@ -67,7 +118,7 @@ export async function fetchToolPricingMap(): Promise<Record<string, ToolPricingR
 
   for (const toolKey of ['pro-tryon', 'pro-decoupe', 'pro-swap']) {
     try {
-      const res = await fetch(apiUrl(`/api/tools/${toolKey}/pricing`))
+      const res = await apiFetch(`/api/tools/${toolKey}/pricing`)
       if (!res.ok) continue
       const data = await res.json()
       const qualities = normalizeQualities(data?.qualities ?? data?.Qualities, toolKey)

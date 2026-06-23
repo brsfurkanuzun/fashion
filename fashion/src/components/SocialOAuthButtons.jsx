@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { apiUrl } from '@/lib/api'
-import { isFirebaseConfigured, signInWithGoogleFirebase } from '@/lib/firebase'
+import { apiFetch } from '@/lib/api'
+import { isFirebaseConfigured, OAUTH_RETURN_KEY, startGoogleFirebaseRedirect } from '@/lib/firebase'
 
 function loadScriptOnce(src) {
   return new Promise((resolve, reject) => {
@@ -55,13 +55,13 @@ function AppleGlyph() {
 async function postAuth(path, body) {
   let res
   try {
-    res = await fetch(apiUrl(path), {
+    res = await apiFetch(path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     })
   } catch {
-    throw new Error('Sunucuya bağlanılamadı. Sayfayı https:// ile açın.')
+    throw new Error('Sunucuya bağlanılamadı. Biraz bekleyip tekrar deneyin.')
   }
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
@@ -82,12 +82,16 @@ export default function SocialOAuthButtons({ onSuccess, onStart, disabled, layou
   const onSuccessRef = useRef(onSuccess)
   onSuccessRef.current = onSuccess
 
-  const useGis = Boolean(cfg.googleClientId)
-  const googleEnabled = useGis || firebaseAvailable
+  const envGoogleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() || null
+  // Firebase varsa öncelikli — GIS invalid_client (Authorized JavaScript origins) gerektirir
+  const useFirebase = firebaseAvailable
+  const googleClientId = cfg.googleClientId || envGoogleClientId
+  const useGis = Boolean(googleClientId) && !useFirebase
+  const googleEnabled = useFirebase || Boolean(googleClientId)
 
   useEffect(() => {
     let cancelled = false
-    fetch(apiUrl('/api/auth/client-config'))
+    apiFetch('/api/auth/client-config')
       .then((r) => {
         if (!r.ok) throw new Error(`API ${r.status}`)
         return r.json()
@@ -128,31 +132,19 @@ export default function SocialOAuthButtons({ onSuccess, onStart, disabled, layou
     }
   }, [onStart])
 
-  const handleGoogleFirebase = async () => {
+  const handleGoogleFirebase = () => {
     if (disabled || busy) return
-    setBusy(true)
     setError('')
-    onStart?.()
-    try {
-      const { idToken } = await signInWithGoogleFirebase()
-      const data = await postAuth('/api/auth/firebase', { idToken })
-      onSuccessRef.current(data)
-    } catch (e) {
-      const code = e?.code
-      if (code === 'auth/unauthorized-domain') {
-        setError('Firebase: design.nulatechnology.com Authorized domains listesine eklenmeli.')
-      } else if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') {
-        setError(e?.message || 'Google girişi başarısız.')
-      }
-    } finally {
-      setBusy(false)
-    }
+    sessionStorage.setItem(OAUTH_RETURN_KEY, `${window.location.pathname}${window.location.search}`)
+    startGoogleFirebaseRedirect().catch((e) => {
+      setError(e?.message || 'Google girişi başarısız.')
+    })
   }
 
   useEffect(() => {
     if (!useGis) return undefined
 
-    const cid = cfg.googleClientId
+    const cid = googleClientId
     const el = googleDivRef.current
     if (!cid || !el) return undefined
 
@@ -171,7 +163,6 @@ export default function SocialOAuthButtons({ onSuccess, onStart, disabled, layou
             if (resp?.credential) completeAuth('/api/auth/google', { credential: resp.credential })
           },
           auto_select: false,
-          ux_mode: 'popup',
         })
         window.google.accounts.id.renderButton(host, {
           type: 'standard',
@@ -199,7 +190,7 @@ export default function SocialOAuthButtons({ onSuccess, onStart, disabled, layou
       cancelled = true
       cleanup()
     }
-  }, [cfg.googleClientId, layout, completeAuth, intent, useGis])
+  }, [googleClientId, layout, completeAuth, intent, useGis])
 
   const handleApple = async () => {
     const sid = cfg.appleServicesId

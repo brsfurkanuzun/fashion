@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { X, Mail, Lock, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { apiUrl } from '@/lib/api'
+import { apiFetch } from '@/lib/api'
 import { normalizeAuthResponse } from '@/lib/auth'
 import { SITE_NAME } from '@/lib/brand'
 import SocialOAuthButtons from './SocialOAuthButtons'
@@ -131,7 +131,7 @@ export default function LoginModal({ open, onClose, initialMode = 'login' }) {
 
     if (mode === 'register') {
       try {
-        const registerResponse = await fetch(apiUrl('/api/auth/register'), {
+        const registerResponse = await apiFetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -159,7 +159,7 @@ export default function LoginModal({ open, onClose, initialMode = 'login' }) {
     }
 
     try {
-      const loginResponse = await fetch(apiUrl('/api/auth/login'), {
+      const loginResponse = await apiFetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
