@@ -2,15 +2,19 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Mail } from 'lucide-react'
 import { SITE_NAME } from '@/lib/brand'
 
+const PAYMENT_LOGO_LIGHT = '/images/logo/Colored/logo_band_colored.svg'
+const PAYMENT_LOGO_DARK = '/images/logo/White/logo_band_white.svg'
+
+const LEGAL_LINKS = [
+  { to: '/kullanim-sartlari', label: 'Kullanım Şartları' },
+  { to: '/gizlilik', label: 'Gizlilik' },
+  { to: '/iade-politikasi', label: 'İade' },
+  { to: '/iletisim', label: 'İletişim' },
+]
+
 function InstagramIcon({ className }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden
-    >
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
       <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" strokeWidth="2" />
       <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2" />
       <circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
@@ -53,8 +57,84 @@ function FooterHeading({ children }) {
   )
 }
 
-export default function Footer({ onOpenLogin }) {
+export function FooterPaymentBand({ className = '' }) {
+  const imgClass =
+    'h-7 sm:h-8 w-auto max-w-[min(100%,28rem)] opacity-90'
+
+  return (
+    <div className={`flex flex-col gap-2 ${className}`}>
+      <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-subtle">Güvenli ödeme</p>
+      <img
+        src={PAYMENT_LOGO_LIGHT}
+        alt="Visa, Mastercard, American Express, Troy ve iyzico ile güvenli ödeme"
+        width={456}
+        height={32}
+        className={`${imgClass} dark:hidden`}
+        loading="lazy"
+        decoding="async"
+      />
+      <img
+        src={PAYMENT_LOGO_DARK}
+        alt=""
+        aria-hidden
+        width={456}
+        height={32}
+        className={`${imgClass} hidden dark:block`}
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
+  )
+}
+
+function FooterBottomBar({ year, compact = false }) {
+  return (
+    <div
+      className={`flex flex-col gap-6 border-t border-faint pt-8 ${
+        compact ? 'sm:flex-row sm:items-end sm:justify-between' : 'sm:flex-row sm:items-end sm:justify-between'
+      }`}
+    >
+      <div className="flex flex-col gap-4 sm:gap-3">
+        <p className="text-sm text-subtle font-light">
+          © {year} {SITE_NAME}. Tüm hakları saklıdır.
+        </p>
+        {compact && (
+          <nav className="flex flex-wrap gap-x-4 gap-y-2" aria-label="Yasal">
+            {LEGAL_LINKS.map((l) => (
+              <Link
+                key={l.to}
+                to={l.to}
+                className="text-xs text-muted hover:text-ink transition-colors"
+              >
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+        )}
+      </div>
+      <FooterPaymentBand className={compact ? 'sm:items-end' : ''} />
+      {!compact && (
+        <p className="text-center text-xs text-subtle/90 font-light tracking-wide sm:text-right max-w-md">
+          Görseller örnek amaçlıdır; sonuçlar ürün ve ayarlara göre değişebilir.
+        </p>
+      )}
+    </div>
+  )
+}
+
+export default function Footer({ onOpenLogin, variant = 'default' }) {
   const year = new Date().getFullYear()
+  const compact = variant === 'studio'
+
+  if (compact) {
+    return (
+      <footer className="relative mt-auto border-t border-faint lg:pr-[68px]">
+        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 py-8 sm:py-10">
+          <FooterBottomBar year={year} compact />
+        </div>
+      </footer>
+    )
+  }
 
   return (
     <footer className="relative mt-24 border-t border-faint transition-colors duration-300">
@@ -66,7 +146,6 @@ export default function Footer({ onOpenLogin }) {
 
       <div className="relative max-w-[1400px] mx-auto px-5 sm:px-8 pt-16 pb-10 sm:pt-20 sm:pb-12">
         <div className="grid grid-cols-1 gap-14 sm:gap-12 md:grid-cols-2 lg:grid-cols-12 lg:gap-10">
-          {/* Marka */}
           <div className="lg:col-span-4 flex flex-col gap-6">
             <div>
               <Link
@@ -102,16 +181,12 @@ export default function Footer({ onOpenLogin }) {
             </div>
           </div>
 
-          {/* Ürün */}
           <nav className="lg:col-span-2" aria-label="Ürün">
             <FooterHeading>Ürün</FooterHeading>
             <ul className="space-y-3.5">
               {productLinks.map((l) => (
                 <li key={l.to}>
-                  <Link
-                    to={l.to}
-                    className="text-[0.9375rem] text-muted font-light transition-colors duration-200 hover:text-ink cursor-pointer"
-                  >
+                  <Link to={l.to} className="text-[0.9375rem] text-muted font-light transition-colors duration-200 hover:text-ink cursor-pointer">
                     {l.label}
                   </Link>
                 </li>
@@ -119,16 +194,12 @@ export default function Footer({ onOpenLogin }) {
             </ul>
           </nav>
 
-          {/* Kaynak */}
           <nav className="lg:col-span-2" aria-label="Kaynak ve yasal">
             <FooterHeading>Kaynak</FooterHeading>
             <ul className="space-y-3.5">
               {resourceLinks.map((l) => (
                 <li key={l.label}>
-                  <Link
-                    to={l.to}
-                    className="text-[0.9375rem] text-muted font-light transition-colors duration-200 hover:text-ink cursor-pointer"
-                  >
+                  <Link to={l.to} className="text-[0.9375rem] text-muted font-light transition-colors duration-200 hover:text-ink cursor-pointer">
                     {l.label}
                   </Link>
                 </li>
@@ -136,7 +207,6 @@ export default function Footer({ onOpenLogin }) {
             </ul>
           </nav>
 
-          {/* CTA */}
           <div className="md:col-span-2 lg:col-span-4">
             <FooterHeading>Başlayın</FooterHeading>
             <div className="rounded-2xl border border-faint bg-gradient-to-br from-elevated/90 via-[var(--card-bg)] to-transparent p-6 shadow-[0_24px_48px_-24px_rgba(0,0,0,0.12)] dark:shadow-[0_24px_48px_-24px_rgba(0,0,0,0.45)] dark:from-elevated/40 dark:via-[var(--card-bg)] dark:to-transparent backdrop-blur-md">
@@ -158,13 +228,8 @@ export default function Footer({ onOpenLogin }) {
           </div>
         </div>
 
-        <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-faint pt-8 sm:flex-row sm:items-end">
-          <p className="text-center text-sm text-subtle font-light sm:text-left">
-            © {year} {SITE_NAME}. Tüm hakları saklıdır.
-          </p>
-          <p className="text-center text-xs text-subtle/90 font-light tracking-wide sm:text-right max-w-md">
-            Görseller örnek amaçlıdır; sonuçlar ürün ve ayarlara göre değişebilir.
-          </p>
+        <div className="mt-16">
+          <FooterBottomBar year={year} />
         </div>
       </div>
     </footer>

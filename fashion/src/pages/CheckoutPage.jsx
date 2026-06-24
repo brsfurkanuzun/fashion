@@ -62,7 +62,7 @@ export default function CheckoutPage() {
       return
     }
     if (!creditsAcknowledged) {
-      setError('Devam etmek için dijital kredi onayını işaretleyin.')
+      setError('Devam etmek için kullanım hakkı onayını işaretleyin.')
       return
     }
     setLoading(true)
@@ -139,8 +139,8 @@ export default function CheckoutPage() {
               onChange={(e) => setCreditsAcknowledged(e.target.checked)}
             />
             <span className="text-xs text-muted leading-relaxed group-hover:text-ink transition-colors">
-              Dijital kredi satın aldığımı ve bu kredilerin yapay zekâ görsel üretim hizmetlerine erişim sağladığını
-              anlıyorum.
+              AI Görsel Üretim Hizmeti Kullanım Hakkı satın aldığımı; bunun sanal para, jeton veya token olmadığını
+              ve yalnızca platformdaki yapay zekâ görsel üretim hizmetlerinde kullanılabileceğini anlıyorum.
             </span>
           </label>
           {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}

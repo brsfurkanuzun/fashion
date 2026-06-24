@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Check, Minus, ChevronDown } from 'lucide-react'
 import { ModernPricingPage } from '@/components/ui/animated-glassy-pricing'
-import CreditsComplianceSection from '@/components/compliance/CreditsComplianceSection'
+import CreditsComplianceSection, { USAGE_RIGHT_LABEL } from '@/components/compliance/CreditsComplianceSection'
 import Reveal from '../components/Reveal'
 import SectionLabel from '../components/SectionLabel'
 import { useAuth } from '../context/AuthContext'
@@ -23,7 +23,7 @@ const PRO_TIERS = [
 
 const comparison = [
   { feature: 'Ödeme modeli', starter: 'Tek sefer', pro: 'Tek sefer (paket)', enterprise: 'Özel anlaşma' },
-  { feature: 'Kredi bakiyesi', starter: '1.000', pro: '2.500 – 75.000', enterprise: 'Özel' },
+  { feature: 'AI görsel üretim hakkı', starter: '1.000', pro: '2.500 – 75.000', enterprise: 'Özel' },
   { feature: 'FAST & PRO araçları', starter: true, pro: true, enterprise: true },
   { feature: 'Detay koruma', starter: true, pro: true, enterprise: true },
   { feature: 'Motion / video', starter: true, pro: true, enterprise: true },
@@ -34,20 +34,20 @@ const comparison = [
 
 const faqs = [
   {
-    q: 'Kredi nasıl harcanır?',
-    a: 'Her üretimde kullandığınız araç ve çözünürlük (ör. 1K / 2K / 4K) farklı kredi maliyeti taşır. Üretim başlamadan maliyet ekranda görünür.',
+    q: 'Kullanım hakkı (kredi) nasıl harcanır?',
+    a: 'Her üretimde kullandığınız araç ve çözünürlük (ör. 1K / 2K / 4K) farklı kullanım hakkı maliyeti taşır. Üretim başlamadan maliyet ekranda görünür. Krediler, AI Görsel Üretim Hizmeti Kullanım Hakkıdır; sanal para veya jeton değildir.',
   },
   {
     q: 'Başlangıç paketi kime uygun?',
-    a: 'Stüdyoyu denemek isteyenler için: tek seferde 500 TL karşılığında 1.000 kredi. Araçları gerçek iş akışında test edebilirsiniz.',
+    a: 'Stüdyoyu denemek isteyenler için: tek seferde 500 TL karşılığında 1.000 AI Görsel Üretim Hizmeti Kullanım Hakkı. Araçları gerçek iş akışında test edebilirsiniz.',
   },
   {
     q: 'Profesyonel pakette slider ne işe yarar?',
-    a: 'Sabit fiyat kademelerinden birini seçersiniz (1.000 TL–20.000 TL). Her kademenin kredi miktarı tabloda sabit; en yüksek paket 20.000 TL için 75.000 kredi.',
+    a: 'Sabit fiyat kademelerinden birini seçersiniz (1.000 TL–20.000 TL). Her kademenin kullanım hakkı miktarı tabloda sabit; en yüksek paket 20.000 TL için 75.000 AI Görsel Üretim Hizmeti Kullanım Hakkı içerir.',
   },
   {
     q: 'Kurumsal ihtiyaçlar için?',
-    a: 'Yüksek hacim, SLA veya API için bizimle iletişime geçin; size özel kredi ve fiyat teklifi hazırlarız.',
+    a: 'Yüksek hacim, SLA veya API için bizimle iletişime geçin; size özel kullanım hakkı ve fiyat teklifi hazırlarız.',
   },
 ]
 
@@ -115,10 +115,10 @@ export default function PricingPage() {
         price: nfTry.format(500),
         priceSuffix: 'tek sefer',
         features: [
-          '1.000 kredi',
+          '1.000 AI Görsel Üretim Hizmeti Kullanım Hakkı',
           'FAST & PRO araçlarına erişim',
           'Gerçek üretimle risksiz deneme',
-          'Kredi, seçtiğiniz araç ve kaliteye göre harcanır',
+          'Haklar, seçtiğiniz araç ve kaliteye göre harcanır',
         ],
         buttonText: 'Satın Al',
         buttonVariant: 'secondary',
@@ -137,7 +137,10 @@ export default function PricingPage() {
               </div>
               <p className="mt-2 text-[15px] text-foreground/80 font-sans">
                 <span className="font-medium text-cyan-600 dark:text-cyan-400">{nfInt.format(proCredits)}</span>{' '}
-                kredi
+                kullanım hakkı
+              </p>
+              <p className="mt-1 text-[11px] text-foreground/55 font-sans leading-snug">
+                {USAGE_RIGHT_LABEL} — arayüzde kredi olarak gösterilir
               </p>
             </div>
             <div className="space-y-2">
@@ -156,11 +159,11 @@ export default function PricingPage() {
               />
               <div className="flex justify-between gap-2 text-[11px] sm:text-xs text-foreground/60 font-sans leading-tight">
                 <span>
-                  {nfTry.format(PRO_TIERS[0].tl)} · {nfInt.format(PRO_TIERS[0].credits)} kredi
+                  {nfTry.format(PRO_TIERS[0].tl)} · {nfInt.format(PRO_TIERS[0].credits)} hak
                 </span>
                 <span>
                   {nfTry.format(PRO_TIERS[PRO_TIERS.length - 1].tl)} ·{' '}
-                  {nfInt.format(PRO_TIERS[PRO_TIERS.length - 1].credits)} kredi
+                  {nfInt.format(PRO_TIERS[PRO_TIERS.length - 1].credits)} hak
                 </span>
               </div>
             </div>
@@ -168,7 +171,7 @@ export default function PricingPage() {
         ),
         features: [
           'Ödeme: seçtiğiniz paket tutarı (tek sefer)',
-          'Kredi: 1.000 – 20.000 TL arası 7 sabit paket',
+          'AI Görsel Üretim Hizmeti Kullanım Hakkı: 7 sabit paket',
           'Tüm PRO ve FAST üretim araçları',
           'Öncelikli destek',
         ],
@@ -182,7 +185,7 @@ export default function PricingPage() {
         description: 'Ajanslar ve yüksek hacimli ekipler.',
         price: 'Özel',
         priceSuffix: '',
-        features: ['Özel kredi ve fiyat', 'API erişimi', 'SLA ve sözleşme', 'Dedicated hesap yöneticisi'],
+        features: ['Özel kullanım hakkı ve fiyat', 'API erişimi', 'SLA ve sözleşme', 'Dedicated hesap yöneticisi'],
         buttonText: 'İletişime Geç',
         buttonVariant: 'secondary',
         onButtonClick: goStart,
@@ -198,10 +201,10 @@ export default function PricingPage() {
         showAnimatedBackground={false}
         title={
           <>
-            Krediyle <span className="text-cyan-500 dark:text-cyan-400">ölçeklenen</span> paketler
+            AI görsel üretim <span className="text-cyan-500 dark:text-cyan-400">paketleri</span>
           </>
         }
-        subtitle="Parayı doğrudan krediye çevirirsiniz; üretimler araç ve kaliteye göre kredi harcar. Başlangıç paketi deneme, Profesyonel’de tutarı siz seçersiniz."
+        subtitle="Satın aldığınız paketler, yapay zekâ destekli görsel üretim hizmeti kullanım hakkı sağlar. Arayüzde bu haklar kredi olarak gösterilir; sanal para, jeton veya token değildir."
         plans={plans}
       />
 

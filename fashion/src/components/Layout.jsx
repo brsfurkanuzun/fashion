@@ -13,7 +13,7 @@ export default function Layout({ loginOpen, loginInitialMode, onOpenLogin, onClo
   const isStudioLayout = studioPaths.includes(location.pathname) && isAuthenticated
 
   return (
-    <div className="grain mesh-bg site-shell min-h-screen text-ink overflow-x-hidden transition-colors duration-300">
+    <div className="grain mesh-bg site-shell min-h-screen text-ink overflow-x-hidden transition-colors duration-300 flex flex-col">
       {isStudioLayout ? (
         <>
           <StudioSidebar />
@@ -22,10 +22,10 @@ export default function Layout({ loginOpen, loginInitialMode, onOpenLogin, onClo
       ) : (
         <Navbar onOpenLogin={onOpenLogin} />
       )}
-      <main className={isStudioLayout ? 'lg:pr-[68px]' : ''}>
+      <main className={`flex-1 ${isStudioLayout ? 'lg:pr-[68px]' : ''}`}>
         <Outlet context={{ openLogin: onOpenLogin }} />
       </main>
-      {!isStudioLayout && <Footer onOpenLogin={onOpenLogin} />}
+      <Footer onOpenLogin={onOpenLogin} variant={isStudioLayout ? 'studio' : 'default'} />
       <LoginModal open={loginOpen} onClose={onCloseLogin} initialMode={loginInitialMode} />
     </div>
   )
