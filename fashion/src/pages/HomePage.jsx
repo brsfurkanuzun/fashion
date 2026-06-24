@@ -1,4 +1,5 @@
 import Hero from '../components/Hero'
+import ProductVersatilitySection from '../components/ProductVersatilitySection'
 import DetailPreservation from '../components/DetailPreservation'
 import StepsSection from '../components/StepsSection'
 import ToolsSection from '../components/ToolsSection'
@@ -10,6 +11,7 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+      <ProductVersatilitySection />
       <DetailPreservation />
       <StepsSection />
       <ToolsSection />
