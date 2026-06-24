@@ -5,6 +5,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithRedirect,
+  signOut,
   type Auth,
   type User,
 } from 'firebase/auth'
@@ -23,6 +24,10 @@ const ID_TOKEN_BACKUP_KEY = 'nuladesign-firebase-idtoken'
 
 export function isFirebaseConfigured() {
   return Boolean(firebaseConfig.apiKey && firebaseConfig.appId && firebaseConfig.projectId)
+}
+
+export function hasPendingOAuthRedirect() {
+  return Boolean(sessionStorage.getItem(OAUTH_RETURN_KEY))
 }
 
 let cachedApp: FirebaseApp | null = null
@@ -89,18 +94,18 @@ async function resolveGoogleFirebaseRedirect(): Promise<{ idToken: string; user:
   const auth = getFirebaseAuth()
   if (!auth) return null
 
+  const pendingRedirect = hasPendingOAuthRedirect()
+
   try {
     await auth.authStateReady()
     const result = await getRedirectResult(auth)
     if (result?.user) return tokenFromUser(result.user)
   } catch {
-    /* StrictMode */
+    /* StrictMode double-mount */
   }
 
-  const backup = sessionStorage.getItem(ID_TOKEN_BACKUP_KEY)
-  if (backup && auth.currentUser) {
-    return { idToken: backup, user: auth.currentUser }
-  }
+  // Yalnızca redirect akışı başlatıldıysa devam et — her sayfa yüklemesinde eski oturumu API'ye gönderme
+  if (!pendingRedirect) return null
 
   if (auth.currentUser) return tokenFromUser(auth.currentUser)
 
@@ -109,4 +114,22 @@ async function resolveGoogleFirebaseRedirect(): Promise<{ idToken: string; user:
 
 export function clearFirebaseAuthBackup() {
   sessionStorage.removeItem(ID_TOKEN_BACKUP_KEY)
+}
+
+export function clearOAuthRedirectState() {
+  sessionStorage.removeItem(OAUTH_RETURN_KEY)
+  clearFirebaseAuthBackup()
+  redirectResultPromise = null
+}
+
+export async function resetFirebaseAuthSession() {
+  const auth = getFirebaseAuth()
+  clearOAuthRedirectState()
+  if (auth?.currentUser) {
+    try {
+      await signOut(auth)
+    } catch {
+      /* ignore */
+    }
+  }
 }
