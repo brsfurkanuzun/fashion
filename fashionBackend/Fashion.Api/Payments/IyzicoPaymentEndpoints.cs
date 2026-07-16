@@ -56,7 +56,7 @@ public static class IyzicoPaymentEndpoints
     private static bool IsConfigured(IyzicoOptions o) =>
         !string.IsNullOrWhiteSpace(o.ApiKey) && !string.IsNullOrWhiteSpace(o.SecretKey);
 
-    private static Options BuildIyzipayOptions(IyzicoOptions o) => new()
+    private static Iyzipay.Options BuildIyzipayOptions(IyzicoOptions o) => new()
     {
         ApiKey = o.ApiKey.Trim(),
         SecretKey = o.SecretKey.Trim(),
@@ -220,8 +220,8 @@ public static class IyzicoPaymentEndpoints
             PaymentGroup = PaymentGroup.PRODUCT.ToString(),
             CallbackUrl = callbackUrl,
             EnabledInstallments = opts.EnabledInstallments?.Length > 0
-                ? [.. opts.EnabledInstallments]
-                : [1],
+                ? opts.EnabledInstallments.ToList()
+                : new List<int> { 1 },
             Buyer = new Buyer
             {
                 Id = user.Id.ToString(),
@@ -254,8 +254,8 @@ public static class IyzicoPaymentEndpoints
                 Description = address,
                 ZipCode = "34000",
             },
-            BasketItems =
-            [
+            BasketItems = new List<BasketItem>
+            {
                 new BasketItem
                 {
                     Id = body.PackageKey.Trim(),
@@ -265,7 +265,7 @@ public static class IyzicoPaymentEndpoints
                     ItemType = BasketItemType.VIRTUAL.ToString(),
                     Price = price,
                 },
-            ],
+            },
         };
 
         CheckoutFormInitialize checkoutFormInitialize;

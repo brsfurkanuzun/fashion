@@ -4,5 +4,4 @@
 **/.vs/
 .git
 .gitignore
-**/Migrations/*.cs
 fashion/dist
