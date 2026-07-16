@@ -68,7 +68,13 @@ export default function CheckoutPage() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setError(data.message || 'Ödeme oturumu başlatılamadı.')
+        const msg =
+          data.message
+          || data.detail
+          || data.title
+          || (typeof data === 'string' ? data : null)
+          || `Ödeme oturumu başlatılamadı (${res.status}).`
+        setError(msg)
         setLoading(false)
         return
       }

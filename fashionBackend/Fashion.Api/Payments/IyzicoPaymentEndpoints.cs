@@ -281,8 +281,14 @@ public static class IyzicoPaymentEndpoints
 
         if (!string.Equals(checkoutFormInitialize.Status, Status.SUCCESS.ToString(), StringComparison.OrdinalIgnoreCase))
         {
-            log.LogWarning("iyzico initialize failed: {Reason}", checkoutFormInitialize.ErrorMessage);
-            return Results.BadRequest(new { message = checkoutFormInitialize.ErrorMessage ?? "iyzico oturumu başlatılamadı." });
+            var reason = checkoutFormInitialize.ErrorMessage ?? "iyzico oturumu başlatılamadı.";
+            log.LogWarning("iyzico initialize failed: {Reason} (BaseUrl={BaseUrl})", reason, opts.BaseUrl);
+            if (reason.Contains("api bilgileri", StringComparison.OrdinalIgnoreCase))
+            {
+                reason += " Anahtarlar sandbox ise Iyzico__BaseUrl=https://sandbox-api.iyzipay.com olmalı; canlı anahtarlar için https://api.iyzipay.com.";
+            }
+
+            return Results.BadRequest(new { message = reason });
         }
 
         return Results.Ok(new
