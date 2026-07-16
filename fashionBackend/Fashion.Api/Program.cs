@@ -19,7 +19,7 @@ if (!string.IsNullOrWhiteSpace(port))
 
 var useInMemoryDb = builder.Configuration.GetValue("Database:UseInMemory", false);
 
-builder.Services.Configure<PayTrOptions>(builder.Configuration.GetSection("PayTr"));
+builder.Services.Configure<IyzicoOptions>(builder.Configuration.GetSection("Iyzico"));
 builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection("Auth"));
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient<FashnService>(client =>
@@ -80,7 +80,7 @@ try
         }
 
         await ExternalAuthSchema.EnsureExternalAuthColumnsAsync(db);
-        await PayTrPaymentEndpoints.EnsurePaymentOrdersTableAsync(db);
+        await IyzicoPaymentEndpoints.EnsurePaymentOrdersTableAsync(db);
         await SeedData.InitializeAsync(db);
     }
 }
@@ -597,7 +597,7 @@ app.MapGet("/api/docs/support", () => Results.Ok(new[]
     new { title = "Galeri", body = "Tamamlanan görseller galeriye kayıt edilir." }
 }));
 
-app.MapPayTrPayments();
+app.MapIyzicoPayments();
 app.MapExternalAuth();
 
 app.Run();

@@ -52,10 +52,11 @@ Railway PostgreSQL'i backend'e bağla:
 ```env
 ASPNETCORE_ENVIRONMENT=Production
 Fashn__ApiKey=<fashn-api-key>
-PayTr__MerchantId=
-PayTr__MerchantKey=
-PayTr__MerchantSalt=
-PayTr__FrontendBaseUrl=https://design.nulatechnology.com
+Iyzico__ApiKey=
+Iyzico__SecretKey=
+Iyzico__BaseUrl=https://api.iyzipay.com
+Iyzico__FrontendBaseUrl=https://design.nulatechnology.com
+Iyzico__CallbackBaseUrl=https://<backend-url>.up.railway.app
 Auth__Google__ClientId=200815809385-Okj5jheifmshmqblt28r1i9jn42ecpjt.apps.googleusercontent.com
 Auth__Firebase__ProjectId=nuladesign-330cd
 Auth__Apple__ServicesId=
@@ -106,5 +107,5 @@ Boş bırakılırsa sadece lokal Vite proxy çalışır.
 ## Notlar
 
 - Eski **MySQL/cPanel** yapılandırması kaldırıldı; tüm migration'lar PostgreSQL (Npgsql) için.
-- `ExternalAuthSchema` ve `PayTrPaymentEndpoints` içindeki ham MySQL SQL artık kullanılmıyor; şema EF migration ile yönetiliyor.
+- `ExternalAuthSchema` ve `IyzicoPaymentEndpoints` içindeki ham MySQL SQL artık kullanılmıyor; şema EF migration ile yönetiliyor.
 - Production'da `Database:SkipMigrations` **false** olmalı (varsayılan).

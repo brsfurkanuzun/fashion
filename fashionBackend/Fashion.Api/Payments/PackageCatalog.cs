@@ -3,7 +3,7 @@ using System.Globalization;
 namespace Fashion.Api.Payments;
 
 /// <summary>Fiyatlandırma sayfası ile uyumlu sabit paketler (tutar kuruş, kredi).</summary>
-public static class PayTrPackageCatalog
+public static class PackageCatalog
 {
     public const string StarterKey = "starter";
 

@@ -1,6 +1,6 @@
 namespace Fashion.Api.Models;
 
-/// <summary>PayTR merchant_oid ile eşleşen bekleyen veya tamamlanan ödeme kaydı.</summary>
+/// <summary>iyzico conversationId (MerchantOid) ile eşleşen bekleyen veya tamamlanan ödeme kaydı.</summary>
 public sealed class PaymentOrder
 {
     public string MerchantOid { get; set; } = string.Empty;

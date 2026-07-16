@@ -1,27 +1,20 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { apiUrl } from '@/lib/api'
 import { TrustInfoCard } from '@/components/compliance/CreditsComplianceSection'
 
-function loadPaytrResizer(onReady) {
-  if (typeof window === 'undefined') return () => {}
-  if (window.iFrameResize) {
-    onReady()
-    return () => {}
-  }
-  const script = document.createElement('script')
-  script.src = 'https://www.paytr.com/js/iframeResizer.min.js'
-  script.async = true
-  script.onload = () => onReady()
-  document.body.appendChild(script)
-  return () => {
-    try {
-      document.body.removeChild(script)
-    } catch {
-      /* ignore */
-    }
-  }
+function mountIyzicoForm(container, html) {
+  if (!container || !html) return
+  container.innerHTML = html
+  container.querySelectorAll('script').forEach((oldScript) => {
+    const newScript = document.createElement('script')
+    Array.from(oldScript.attributes).forEach((attr) => {
+      newScript.setAttribute(attr.name, attr.value)
+    })
+    newScript.appendChild(document.createTextNode(oldScript.innerHTML))
+    oldScript.parentNode?.replaceChild(newScript, oldScript)
+  })
 }
 
 export default function CheckoutPage() {
@@ -34,22 +27,17 @@ export default function CheckoutPage() {
 
   const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
-  const [token, setToken] = useState('')
+  const [identityNumber, setIdentityNumber] = useState('')
+  const [checkoutFormContent, setCheckoutFormContent] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [creditsAcknowledged, setCreditsAcknowledged] = useState(false)
+  const formContainerRef = useRef(null)
 
   useEffect(() => {
-    if (!token) return
-    const cleanup = loadPaytrResizer(() => {
-      try {
-        window.iFrameResize?.({}, '#paytriframe')
-      } catch {
-        /* ignore */
-      }
-    })
-    return cleanup
-  }, [token])
+    if (!checkoutFormContent || !formContainerRef.current) return
+    mountIyzicoForm(formContainerRef.current, checkoutFormContent)
+  }, [checkoutFormContent])
 
   const startPayment = useCallback(async () => {
     setError('')
@@ -67,7 +55,7 @@ export default function CheckoutPage() {
     }
     setLoading(true)
     try {
-      const res = await fetch(apiUrl('/api/payments/paytr/token'), {
+      const res = await fetch(apiUrl('/api/payments/iyzico/initialize'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -75,6 +63,7 @@ export default function CheckoutPage() {
           packageKey,
           phone: phone.trim(),
           address: address.trim(),
+          identityNumber: identityNumber.trim() || null,
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -83,18 +72,22 @@ export default function CheckoutPage() {
         setLoading(false)
         return
       }
-      if (!data.token) {
-        setError('PayTR token dönmedi.')
+      if (data.paymentPageUrl && !data.checkoutFormContent) {
+        window.location.href = data.paymentPageUrl
+        return
+      }
+      if (!data.checkoutFormContent) {
+        setError('iyzico ödeme formu dönmedi.')
         setLoading(false)
         return
       }
-      setToken(data.token)
+      setCheckoutFormContent(data.checkoutFormContent)
     } catch {
       setError('Sunucuya bağlanılamadı.')
     } finally {
       setLoading(false)
     }
-  }, [user?.id, packageKey, phone, address, creditsAcknowledged])
+  }, [user?.id, packageKey, phone, address, identityNumber, creditsAcknowledged])
 
   return (
     <div className="pt-28 pb-16 max-w-lg mx-auto px-5">
@@ -107,7 +100,7 @@ export default function CheckoutPage() {
         </Link>
       </p>
 
-      {!token && (
+      {!checkoutFormContent && (
         <div className="glass-card rounded-2xl p-6 space-y-4 shadow-sm">
           <TrustInfoCard />
 
@@ -131,6 +124,17 @@ export default function CheckoutPage() {
               autoComplete="street-address"
             />
           </div>
+          <div>
+            <label className="block text-xs font-medium text-muted mb-1">T.C. kimlik no (opsiyonel)</label>
+            <input
+              className="w-full rounded-xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-black/30 px-3 py-2 text-sm"
+              value={identityNumber}
+              onChange={(e) => setIdentityNumber(e.target.value)}
+              placeholder="11 haneli TCKN"
+              inputMode="numeric"
+              maxLength={11}
+            />
+          </div>
           <label className="flex items-start gap-3 cursor-pointer group">
             <input
               type="checkbox"
@@ -150,25 +154,17 @@ export default function CheckoutPage() {
             disabled={loading || !creditsAcknowledged}
             className="w-full rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium py-2.5 disabled:opacity-50 cursor-pointer"
           >
-            {loading ? 'Bağlanıyor…' : 'PayTR ile ödemeye geç'}
+            {loading ? 'Bağlanıyor…' : 'iyzico ile ödemeye geç'}
           </button>
           <p className="text-[11px] text-muted leading-relaxed">
-            Kart bilgileri PayTR güvenli sayfasında girilir. Ödeme onayı sunucuya bildirim ile düşer; bu sayfa sadece
-            oturum açar.
+            Kart bilgileri iyzico güvenli ödeme sayfasında girilir. Ödeme onayı sunucuya bildirim ile düşer.
           </p>
         </div>
       )}
 
-      {token && (
+      {checkoutFormContent && (
         <div className="mt-4">
-          <iframe
-            title="PayTR Ödeme"
-            src={`https://www.paytr.com/odeme/guvenli/${token}`}
-            id="paytriframe"
-            frameBorder="0"
-            scrolling="no"
-            style={{ width: '100%', minHeight: 480 }}
-          />
+          <div ref={formContainerRef} className="iyzico-checkout-form w-full min-h-[480px]" />
         </div>
       )}
     </div>

@@ -110,26 +110,29 @@ Bu genelde **MySQL’in dışarıdan dinlenmemesi** veya **firewall’da 3306’
 
 Geçici: `Database__ContinueOnInitFailure=true` → process düşmez, `/api/health` çalışır; veri endpoint’leri DB olmadan hata verir.
 
-## PayTR (iFrame)
+## iyzico (Checkout Form)
 
-1. [PayTR Mağaza Paneli](https://www.paytr.com/) → **Bildirim URL**: tam adres  
-   `https://SENIN-API-DOMAININ/api/payments/paytr/notify`  
-   (Bu endpoint **form POST** kabul eder; yanıt gövdesi yalnızca `OK` olmalı — kodda öyle.)
+1. [iyzico Merchant Panel](https://merchant.iyzipay.com/) → API anahtarlarını alın (sandbox veya production).
 
-2. Render / ortam değişkenleri (örnek):
+2. **Callback URL** (backend):  
+   `https://SENIN-API-DOMAININ/api/payments/iyzico/callback`  
+   iyzico ödeme sonrası `token` ile POST atar; backend sonucu doğrular ve kullanıcıyı frontend'e yönlendirir.
+
+3. Render / ortam değişkenleri (örnek):
 
 ```text
-PayTr__MerchantId=...
-PayTr__MerchantKey=...
-PayTr__MerchantSalt=...
-PayTr__FrontendBaseUrl=https://design.nulatechnology.com
-PayTr__TestMode=0
-PayTr__DebugOn=0
+Iyzico__ApiKey=...
+Iyzico__SecretKey=...
+Iyzico__BaseUrl=https://api.iyzipay.com
+Iyzico__FrontendBaseUrl=https://design.nulatechnology.com
+Iyzico__CallbackBaseUrl=https://SENIN-API-DOMAININ
 ```
 
-Canlı test öncesi: `MerchantId` boşsa API `503` döner (bilerek).
+Sandbox test için `Iyzico__BaseUrl=https://sandbox-api.iyzipay.com` kullanın.
 
-3. MySQL ilk açılışta `PaymentOrders` tablosu yoksa uygulama **CREATE TABLE IF NOT EXISTS** ile oluşturur (yalnızca MySQL sağlayıcısı).
+`ApiKey` boşsa API `503` döner (bilerek).
+
+4. PostgreSQL ilk açılışta `PaymentOrders` tablosu yoksa uygulama **CREATE TABLE IF NOT EXISTS** ile oluşturur.
 
 ## Google / Apple (OAuth)
 
