@@ -282,13 +282,26 @@ public static class IyzicoPaymentEndpoints
         if (!string.Equals(checkoutFormInitialize.Status, Status.SUCCESS.ToString(), StringComparison.OrdinalIgnoreCase))
         {
             var reason = checkoutFormInitialize.ErrorMessage ?? "iyzico oturumu başlatılamadı.";
-            log.LogWarning("iyzico initialize failed: {Reason} (BaseUrl={BaseUrl})", reason, opts.BaseUrl);
-            if (reason.Contains("api bilgileri", StringComparison.OrdinalIgnoreCase))
-            {
-                reason += " Anahtarlar sandbox ise Iyzico__BaseUrl=https://sandbox-api.iyzipay.com olmalı; canlı anahtarlar için https://api.iyzipay.com.";
-            }
+            var baseUrl = string.IsNullOrWhiteSpace(opts.BaseUrl)
+                ? "https://sandbox-api.iyzipay.com"
+                : opts.BaseUrl.Trim();
+            var keyHint = opts.ApiKey.Trim().StartsWith("sandbox-", StringComparison.OrdinalIgnoreCase)
+                ? "sandbox-key"
+                : "live-key (prefix yok)";
+            log.LogWarning(
+                "iyzico initialize failed: {Reason} (BaseUrl={BaseUrl}, KeyHint={KeyHint})",
+                reason,
+                baseUrl,
+                keyHint);
 
-            return Results.BadRequest(new { message = reason });
+            return Results.BadRequest(new
+            {
+                message = reason,
+                iyzicoStatus = checkoutFormInitialize.Status,
+                baseUrl,
+                keyHint,
+                hint = "api bilgileri bulunamadı = ApiKey/SecretKey bu BaseUrl ortamına ait değil veya yanlış. Panelde Sandbox anahtarları için sandbox-api; Canlı anahtarlar için api.iyzipay.com kullan. Back URL onayı da gerekli olabilir.",
+            });
         }
 
         return Results.Ok(new
