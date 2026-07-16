@@ -8,6 +8,9 @@ on:
       - '.github/workflows/deploy-frontend.yml'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -40,12 +43,12 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
         run: npm run build
 
-      - name: Deploy to cPanel (FTP)
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      # Build çıktısını cpanel-deploy branch'ine yazar (FTP gerekmez)
+      - name: Push dist to cpanel-deploy
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          server: ${{ secrets.CPANEL_FTP_SERVER }}
-          username: ${{ secrets.CPANEL_FTP_USERNAME }}
-          password: ${{ secrets.CPANEL_FTP_PASSWORD }}
-          protocol: ftps
-          local-dir: ./fashion/dist/
-          server-dir: ${{ secrets.CPANEL_FTP_SERVER_DIR }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./fashion/dist
+          publish_branch: cpanel-deploy
+          force_orphan: true
+          commit_message: 'deploy: frontend build'
